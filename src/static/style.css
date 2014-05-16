@@ -1,5 +1,6 @@
 * {
   box-sizing: border-box;
+  margin: 0px;
 }
 
 html, body {
@@ -151,7 +152,7 @@ ul.dropdown.show {
       background-color: #f5f5f5;
     }
 
-.body {
+#body {
   margin: 20px 30px 0;
 }
 
@@ -188,3 +189,54 @@ ul.dropdown.show {
 .prompt {
   display: block;
 }
+
+.question {
+  min-width: 600px;
+  background: #C6DCF1;
+  padding: 10px;
+  border-radius: 3px;
+}
+
+  .question > .header {
+    padding: 10px;
+    background: #D5D5D5;
+    border-radius: 3px;
+  }
+
+      .question > .header > h3 > .course {
+        float: right;
+      }
+
+  .question > .body {
+    padding: 0px 10px 10px 10px;
+  }
+
+    .question > .body > h4.prompt  {
+      padding: 10px;
+    }
+    
+    .question > .body > .answer {
+      background: #F5C08B;
+      padding: 10px;
+      border-radius: 3px;
+      font-family: 'Comic Sans MS';
+    }
+
+    .question > .body > .space {
+      padding: 1px;
+    }
+
+  .question > .footer {
+    padding: 10px;
+  }
+
+    .question > .footer > .submit {
+      float: left;
+    }
+    
+    .question > .footer > .timer {
+      margin-left: auto;
+      text-align: right;
+    }
+
+
