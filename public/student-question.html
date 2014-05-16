@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+    <!-- <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap-theme.min.css"> -->
+    <!-- <link rel="stylesheet" href="gnuclicker.css"> -->
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    <style type="text/css">
+     .question {
+       background: #C6DCF1;
+       width: 600px;
+     }
+     .answer {
+       background: #F5C08B;
+     }
+     .course {
+       float: right;
+     }
+     .timer {
+       float: right;
+     }
+     .submit {
+       float: left;
+     }
+    </style>
+    <title>Question</title>
+  </head>
+  <body>
+    <div class="question panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">
+          Understanding Queues
+          <span class="course">CSE 12</span>
+        </h3>
+      </div>
+      <div class="panel-body">
+        <h4 id="prompt">I'm inserting a new element into a queue. Where will it
+            appear?</h4>
+        <div class="list-group">
+          <div class="answer list-group-item" id="answer-a">
+            A. <span id="answer-a-text">Front</span>
+          </div>
+          <div class="answer list-group-item" id="answer-b">
+            B. <span id="answer-b-text">Back</span>
+          </div>
+          <div class="answer list-group-item" id="answer-c">
+            C. <span id="answer-c-text">Middle</span>
+          </div>
+          <div class="answer list-group-item" id="answer-d">
+            D. <span id="answer-d-text">Cannot insert like this</span>
+          </div>
+          <div class="answer list-group-item" id="answer-e">
+            E. <span id="answer-e-text">None of the above</span>
+          </div>
+        </div>
+        <div class="submit">
+          <button type="submit">Submit</button>
+        </div>
+        <div class="timer">
+          Timer: <span id="timer">29</span> sec
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

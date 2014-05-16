@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+    <!-- <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap-theme.min.css"> -->
+    <!-- <link rel="stylesheet" href="gnuclicker.css"> -->
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    <style type="text/css">
+     .question {
+       background: #C6DCF1;
+       width: 600px;
+     }
+     .answer {
+       display: flex;
+       flex-direction: row;
+       align-items: baseline;
+       justify-content: space-between;
+     }
+     .answer > .progressbar {
+       background: #F5C08B;
+       overflow-x: visible;
+       white-space: nowrap
+     }
+     .answer > .active {
+       background-image: linear-gradient(to bottom, #F5C08B 0, #EF8526 100%);
+       border-color: #EF8526;
+       text-shadow: 0 -1px 0 #777777;
+     }
+     .course {
+       float: right;
+     }
+     .timer {
+       float: right;
+     }
+     .submit {
+       /* float: left; */
+       display: inline-block;
+     }
+     .back {
+       display: inline-block;
+       float: right;
+     }
+     .answer-count {
+     }
+    </style>
+    <title>Question</title>
+  </head>
+  <body>
+    <div class="question panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">
+          Understanding Queues
+          <span class="course">CSE 12</span>
+        </h3>
+      </div>
+      <div class="panel-body">
+        <h4 id="prompt">
+          I'm inserting a new element into a queue. Where will it appear?
+        </h4>
+        <div class="list-group" id="answers">
+          <div class="answer">
+            <div class="list-group-item progressbar active"
+                 role="progressbar"
+                 valuenow="25"
+                 aria-valuemin="0"
+                 aria-valuemax="100"
+                 style="width: 25%;"
+                 id="answer-a">
+              A. <span id="answer-a-text">Front</span>
+            </div>
+            <div class="answer-count" id="answer-a-count">25</div>
+          </div>
+          <div class="answer">
+            <div class="list-group-item progressbar"
+                 role="progressbar"
+                 valuenow="50"
+                 aria-valuemin="0"
+                 aria-valuemax="100"
+                 style="width: 50%;"
+                 id="answer-b">
+              B. <span id="answer-b-text">Back</span>
+            </div>
+            <div class="answer-count" id="answer-b-count">50</div>
+          </div>
+          <div class="answer">
+            <div class="list-group-item progressbar"
+                 role="progressbar"
+                 valuenow="40"
+                 aria-valuemin="0"
+                 aria-valuemax="100"
+                 style="width: 40%;"
+                 id="answer-c">
+              C. <span id="answer-c-text">Middle</span>
+            </div>
+            <div class="answer-count" id="answer-c-count">40</div>
+          </div>
+          <div class="answer">
+            <div class="list-group-item progressbar"
+                 role="progressbar"
+                 valuenow="24"
+                 aria-valuemin="0"
+                 aria-valuemax="100"
+                 style="width: 24%;"
+                 id="answer-d">
+              D. <span id="answer-d-text">Cannot insert like this</span>
+            </div>
+            <div class="answer-count" id="answer-d-count">24</div>
+          </div>
+          <div class="answer">
+            <div class="list-group-item progressbar"
+                 role="progressbar"
+                 valuenow="10"
+                 aria-valuemin="0"
+                 aria-valuemax="100"
+                 style="width: 10%;"
+                 id="answer-e">
+              E. <span id="answer-e-text">None of the above</span>
+            </div>
+            <div class="answer-count" id="answer-e-count">10</div>
+          </div>
+        </div>
+        <div class="submit">
+          Correct answer: <span id="answer">A</span>
+        </div>
+        <div class="back">
+          <button type="submit">Back</button>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
