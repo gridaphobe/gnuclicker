@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" type="text/css" href="../style.css" />
+  <title>Home</title>
+  <script type="text/javascript" src="../js/ui.js"></script>
+</head>
+<body>
+
+<div class="page portal">
+  <div class="nav">
+    <div class="item brand"><a href="../">Gnu/Clicker</a></div>
+    <div class="item home sel"><a href="./">Home</a></div>
+    <div class="item class">
+      <a class="dropdown-expand" href="#" onclick="return false;">Class &#x25be;</a>
+      <ul class="dropdown">
+        <li><a href="#">CSE 12</a></li>
+        <li><a href="#">CSE 100</a></li>
+      </ul>
+    </div>
+    <div class="item home right"><a href="login.php">Login</a></div>
+  </div>
+  <div id="body">
+    <div class="question">
+      <div class="header">
+        <h3>
+          Understanding Queues
+          <span class="course">CSE 12</span>
+        </h3>
+      </div>
+      <div class="body">
+        <h4 class="prompt">I'm inserting a new element into a queue. Where will it appear?</h4>
+        <div class="answer item" id="answer-a">
+          A. Front
+        </div>
+        <div class="space"></div>
+        <div class="answer item" id="answer-b">
+          B. Back
+        </div>
+        <div class="space"></div>
+        <div class="answer item" id="answer-c">
+          C. Middle
+        </div>
+        <div class="space"></div>
+        <div class="answer item" id="answer-d">
+          D. Cannot insert like this
+        </div>
+        <div class="space"></div>
+        <div class="answer item" id="answer-e">
+          E. None of the above
+        </div>
+      </div>
+      <div class="footer">
+        <div class="submit">
+          <button type="submit">Submit</button>
+        </div>
+        <div class="timer">
+          Timer: <span id="timer">29</span> sec
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
