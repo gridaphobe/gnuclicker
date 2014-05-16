@@ -2,6 +2,7 @@ from flask import Flask, jsonify, make_response
 import uuid
 
 app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
 
 questions = [
     {
@@ -31,9 +32,9 @@ questions = [
 @app.route('/classes/<string:class_id>/questions', methods = ['GET'])
 def get_questions(class_id):
     # we should use class_id, but I'm not bothering for the quick in memory
-    # version 
+    # version
     # currently always returns all questions
-    
+
     print class_id
 
     return jsonify({'questions': questions})
@@ -41,8 +42,8 @@ def get_questions(class_id):
 @app.route('/classes/<string:class_id>/questions/<string:question_id>', methods = ['GET'])
 def get_question(class_id, question_id):
     # we should use class_id, but I'm not bothering for the quick in memory
-    # version 
-    
+    # version
+
     question = filter(lambda t: t['id'] == question_id, questions)
 
     if len(question) == 0:
