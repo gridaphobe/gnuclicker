@@ -1,0 +1,242 @@
+* {
+  box-sizing: border-box;
+  margin: 0px;
+}
+
+html, body {
+  font-family: sans-serif;
+  font-size: 16px;
+  margin: 0;
+  padding : 0;
+}
+
+a {
+  text-decoration: none;
+  color: #222;
+}
+
+.page.home {
+  background-color: #eef;
+  border-radius: 8px;
+  width: 660px;
+  margin: 30px auto 0;
+  padding-bottom: 10px;
+}
+
+  .page.home > .title {
+    text-align: center;
+    border-radius: 8px;
+    line-height: 50px;
+    font-size: 32px;
+    background-color: #9af;
+  }
+
+  .page.home > .link {
+    height: 40px;
+    line-height: 40px;
+    background-color: #fb5;
+    border-radius: 8px;
+    margin: 20px 10px 10px;
+    font-size: 24px;
+    text-align: center;
+  }
+
+.page {
+  width: 100%;
+}
+
+  .page > .nav {
+    background-repeat: repeat-x;
+    background-image: linear-gradient(to bottom, #fff 0px, #f8f8f8 100%);
+    box-shadow: 0px 1px 0px rgba(255, 255, 255, 0.15) inset, 0px 1px 5px rgba(0, 0, 0, 0.075);
+    width: 100%;
+    height: 50px;
+    line-height: 20px;
+    border: 1px solid transparent;
+    border-color: #e7e7e7;
+  }
+
+    .page > .nav > .item {
+      display: block;
+      position: relative;
+      float: left;
+      font-size: 14px;
+    }
+
+      .page > .nav > .item > a {
+        display: block;
+        width: 100%;
+        height: 100%;
+        line-height: 48px;
+        color: #777;
+        padding: 0 15px;
+      }
+
+      .page > .nav > .item > a:hover,
+      .page > .nav > .item > a:focus {
+        color: #333;
+      }
+
+      .page > .nav > .item > * {
+        line-height: normal;
+      }
+
+      .page > .nav > .item > .dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        margin: 0;
+      }
+
+    .page > .nav > .item.sel {
+      background-repeat: repeat-x;
+      background-image: linear-gradient(to bottom, #ebebeb 0PX, #f3f3f3 100%);
+      box-shadow: 0px 3px 9px rgba(0, 0, 0, 0.075) inset;
+      background-color: #e7e7e7;
+      background-size: auto auto;
+    }
+
+      .page > .nav > .item.sel > a {
+        color: #555;
+      }
+
+      .page > .nav > .item.sel > a:hover {
+        color: #555;
+      }
+
+    .page > .nav > .item.brand {
+      font-size: 18px;
+      color: #777;
+    }
+
+      .page > .nav > .item.brand > a {
+        color: #5e5e5e;
+      }
+
+      .page > .nav > .item.brand > a:hover,
+      .page > .nav > .item.brand > a:focus {
+        color: #2a6496;
+      }
+
+    .page > .nav > .item.right {
+      float: right;
+    }
+
+ul.dropdown {
+  display: none;
+  padding: 5px 0;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  background-color: #fff;
+  margin: 0;
+}
+
+ul.dropdown.show {
+  display: block;
+}
+
+  ul.dropdown > li {
+    display: block;
+    margin: 0;
+  }
+
+    ul.dropdown > li > a {
+      display: block;
+      line-height: 20px;
+      font-size: 14px;
+      padding: 3px 20px;
+      color: #262626;
+      white-space: nowrap;
+    }
+
+    ul.dropdown > li > a:hover {
+      background-color: #f5f5f5;
+    }
+
+#body {
+  margin: 20px 30px 0;
+}
+
+.lessons {
+  float: right;
+  width: 300px;
+  border-radius: 4px;
+  border: 1px solid #d5d5d5;
+  color: #555;
+}
+
+  .lessons > .heading {
+    padding: 0 20px;
+    background-color: #eaeaea;
+    background-image: linear-gradient(#fafafa, #eaeaea);
+    background-repeat: repeat-x;
+    height: 35px;
+    line-height: 35px;
+  }
+
+  .lessons > .item {
+    border-top: 1px solid #d5d5d5;
+    height: 36px;
+    line-height: 35px;
+    padding: 0 20px;
+  }
+
+  .lessons > .item.add {
+    background-color: #a0e894;
+    background-image: linear-gradient(#eaffd8, #a0e894);
+    background-repeat: repeat-x;
+  }
+
+.prompt {
+  display: block;
+}
+
+.question {
+  min-width: 600px;
+  background: #C6DCF1;
+  padding: 10px;
+  border-radius: 3px;
+}
+
+  .question > .header {
+    padding: 10px;
+    background: #D5D5D5;
+    border-radius: 3px;
+  }
+
+      .question > .header > h3 > .course {
+        float: right;
+      }
+
+  .question > .body {
+    padding: 0px 10px 10px 10px;
+  }
+
+    .question > .body > h4.prompt  {
+      padding: 10px;
+    }
+    
+    .question > .body > .answer {
+      background: #F5C08B;
+      padding: 10px;
+      border-radius: 3px;
+      font-family: 'Comic Sans MS';
+    }
+
+    .question > .body > .space {
+      padding: 1px;
+    }
+
+  .question > .footer {
+    padding: 10px;
+  }
+
+    .question > .footer > .submit {
+      float: left;
+    }
+    
+    .question > .footer > .timer {
+      margin-left: auto;
+      text-align: right;
+    }
+
+
