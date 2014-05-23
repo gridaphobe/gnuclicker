@@ -28,7 +28,7 @@ for course in courses:
       allChoices = "[ %s ]" % (" ".join([choice.choiceStr for choice in
         question.choices]))
       correctChoices = "[ %s ]" % (" ".join([choice.choiceStr for choice in
-        question.correctChoices]))
+        question.choices if choice.choiceValid != 0]))
       print("\tChoices: %s Correct: %s" % (allChoices, correctChoices))
       for answerRound in question.rounds:
         print("\tResults for round start: %d finish: %d" % (answerRound.startTime,

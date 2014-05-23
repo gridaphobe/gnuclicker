@@ -65,13 +65,13 @@ choice3Id = uuid.uuid4()
 choice4Id = uuid.uuid4()
 
 choice1 = Choice(choiceId=str(choice1Id), question=question1,
-  choiceStr="European")
+  choiceStr="European", choiceValid=0)
 choice2 = Choice(choiceId=str(choice2Id), question=question1,
-  choiceStr="African")
+  choiceStr="African", choiceValid=0)
 choice3 = Choice(choiceId=str(choice3Id), question=question1,
-  choiceStr="AAAAARGGGHHHH")
+  choiceStr="AAAAARGGGHHHH", choiceValid=1)
 choice4 = Choice(choiceId=str(choice4Id), question=question1,
-  choiceStr="5 mph")
+  choiceStr="5 mph", choiceValid=1)
 
 # Add answers to session.
 db.session.add(choice1)
@@ -84,10 +84,6 @@ question1.choices.append(choice1)
 question1.choices.append(choice2)
 question1.choices.append(choice3)
 question1.choices.append(choice4)
-
-# Add correct answers to correct answer set.
-question1.correctChoices.append(choice3)
-question1.correctChoices.append(choice4)
 
 # Add one round of answers to the first question.
 round1Id = uuid.uuid4()
