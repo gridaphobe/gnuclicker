@@ -33,6 +33,13 @@ class User(db.Model):
     backref='students')
   instructs = db.relationship('Course', backref='instructor')
 
+  def __iter__(self):
+    yield ('userId', self.userId)
+    yield ('universityId', self.universityId)
+    yield ('name', self.name)
+    yield ('enrolledIn', self.enrolledIn)
+    yield ('instructs', self.instructs)
+
 class Course(db.Model):
   '''
   A course has a title and a single instructor. Multiple students are enrolled
