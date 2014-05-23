@@ -1,9 +1,12 @@
 from flask import Flask, jsonify, make_response
 from flask.ext.restful import Api, Resource, reqparse
+from flask.ext.sqlalchemy import SQLAlchemy
 import uuid
+import config
 
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
+app = Flask(config.APP_NAME)
+app.config.from_object(config)
+db = SQLAlchemy(app)
 
 api = Api(app)
 
@@ -18,8 +21,9 @@ class CoursesListApi(Resource):
     '''
     Return all courses matching the given student and instructor id filters.
     '''
+    args = self.reqparse.parse_args()
     # TODO: Implement
-    return None
+    return jsonify(args)
 
 api.add_resource(CoursesListApi, '/courses', endpoint='courses_list')
 
