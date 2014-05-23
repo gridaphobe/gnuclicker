@@ -3,3 +3,4 @@
 virtualenv flask
 source flask/bin/activate
 pip install flask
+pip install flask-sqlalchemy
