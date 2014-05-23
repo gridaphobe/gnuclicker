@@ -11,9 +11,9 @@ user1Id = uuid.uuid4()
 user2Id = uuid.uuid4()
 user3Id = uuid.uuid4()
 
-user1 = User(userId=user1Id, universityId="A12345678", name="Joe Pesci")
-user2 = User(userId=user2Id, universityId="B12345678", name="Joe Biden")
-user3 = User(userId=user3Id, universityId="C12345678", name="Joe Stalin")
+user1 = User(userId=str(user1Id), universityId="A12345678", name="Joe Pesci")
+user2 = User(userId=str(user2Id), universityId="B12345678", name="Joe Biden")
+user3 = User(userId=str(user3Id), universityId="C12345678", name="Joe Stalin")
 
 db.session.add(user1)
 db.session.add(user2)
@@ -23,4 +23,7 @@ db.session.commit()
 
 users = User.query.all()
 for user in users:
-  print(user)
+  print(user.name)
+  print(user.universityId)
+  print(user.userId)
+  print()
