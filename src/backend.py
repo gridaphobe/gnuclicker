@@ -12,12 +12,12 @@ api = Api(app)
 def getArg(args, name):
   return args.get(name, None)
 
-
 def myJson(o):
+  # TODO: Fix awful hack.
   if (isinstance(o, list)):
     return map(lambda x: myJson(x), o)
   else:
-    return jsonify(o)
+    return jsonify(o).response
 
 class CoursesListApi(Resource):
   def __init__(self):
@@ -50,7 +50,6 @@ class CoursesListApi(Resource):
       # Return all classes
       res = Course.query.all()
 
-    # TODO: Implement
     return myJson(res)
 
 api.add_resource(CoursesListApi, '/courses', endpoint='courses_list')
@@ -60,8 +59,8 @@ class LecturesListApi(Resource):
     '''
     Return all lectures for the given course.
     '''
-    # TODO: Implement.
-    return None
+    course = Course.query.get(courseId)
+    return myJson(course.lectures)
 
 api.add_resource(LecturesListApi, '/courses/<string:courseId>/lectures',
   endpoint='lectures_list')
@@ -77,8 +76,25 @@ class CourseStudentManifestApi(Resource):
     Return all students enrolled in course (if no lecture specified) or all
     students attending lecture (if lecture specified).
     '''
-    # TODO: Implement.
-    return None
+    args = self.reqparse.parse_args()
+    lectureId = getArg(args, "lectureId")
+    course = Course.query.get(courseId)
+    if lectureId is None:
+      # Return all students enrolled in class.
+      return myJson([student for student in course.students])
+    else:
+      # Return all students attending a lecture.
+      lecture = Lecture.query.get("lectureId")
+      if lecture.course != course:
+        # Invalid lecture for this course.
+        return None
+      students = set()
+      for question in lecture.questions:
+        for answerRound in question.rounds:
+          for response in answerRound.responses:
+            students.add(response.studentId)
+
+      return myJson(students)
 
 api.add_resource(CourseStudentManifestApi,
   '/courses/<string:courseId>/students', endpoint='course_student_manifest')
@@ -88,8 +104,7 @@ class UserApi(Resource):
     '''
     Return user details for specified user.
     '''
-    # TODO: Implement.
-    return None
+    return myJson(User.query.get(userId))
 
 api.add_resource(UserApi, '/users/<string:userId>', endpoint='user')
 
@@ -117,8 +132,24 @@ class QuestionsApi(Resource):
     Return all questions, matching the lecture id if provided, and all of the
     provided tags.
     '''
-    # TODO: Implement.
-    return None
+    args = self.getReqparse.parse_args()
+    lectureId = getArg(args, "lectureId")
+    # TODO: Implement question tagging.
+    tags = getArg(args, "tag")
+    course = Course.query.get(courseId)
+
+    if lectureId is None:
+      # Get all questions for course across all lectures.
+      questions = []
+      for lecture in course.lectures:
+        for question in lecture.questions:
+          questions.append(question)
+      return myJson(questions)
+    else:
+      lecture = Lecture.query.get(lectureId)
+      if lecture.course != course:
+        return None
+      return myJson(lecture.questions)
 
   def post(self, courseId):
     '''
@@ -163,6 +194,11 @@ class ResponseRoundsApi(Resource):
     Return responses for all rounds for given class and question, optionally
     filtering on student id.
     '''
+    course = Course.query.get(courseId)
+    question = Question.query.get(questionId)
+    # Verify that the question's lecture is associated with the course.
+    if (question.lecture.course != course):
+      return None
     # TODO: Implement.
     return None
 
