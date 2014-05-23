@@ -19,6 +19,31 @@ a {
   display: none;
 }
 
+button {
+  background-color: #eee;
+  text-shadow: 0 1px 0 rgba(255,255,255,0.9);
+  border: 1px solid #d5d5d5;
+  background-image: linear-gradient(#fcfcfc, #eee);
+  background-repeat: repeat-x;
+  padding: 7px 12px;
+  border-radius: 3px;
+  font-weight: bold;
+}
+
+input[type=text],
+input[type=password] {
+  box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.075) inset;
+  padding: 7px 8px;
+  border-radius: 3px;
+  color: #333;
+  border: 1px solid #ccc;
+  width: 100%;
+}
+
+input[type=text]:focus {
+  box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.075) inset, 0px 0px 5px rgba(81, 167, 232, 0.5);
+}
+
 .page.home {
   background-color: #eef;
   border-radius: 8px;
@@ -192,7 +217,54 @@ ul.dropdown.show {
 
 .prompt {
   display: block;
+  margin: 0 auto;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.075);
+  max-width: 450px;
+  margin-top: 60px;
 }
+
+  .prompt > .header {
+    color: #fff;
+    padding: 10px 20px;
+    background-color: #6c8393;
+    border-radius: 4px 4px 0 0;
+    font-weight: bold;
+    font-size: 16px;
+    text-shadow: 0 -1px 0 rgba(0,0,0,0.5);
+    background-image: linear-gradient(#7F95A5, #6C8393);
+    background-repeat: repeat-x;
+    border-width: 1px;
+    border-style: solid;
+    border-color: #6e8290 #6e8290 #586873;
+  }
+
+  .prompt > .content {
+    padding: 20px;
+    border-width: 1px;
+    border-style: solid;
+    border-color: #fff #d8dee2 #d8dee2;
+  }
+
+    .prompt > .content > .label {
+      font-weight: bold;
+      font-size: 12px;
+    }
+
+    .prompt > .content > .input {
+    }
+
+    .prompt > .content > .sm-space {
+      height: 6px;
+    }
+
+    .prompt > .content > .lg-space {
+      height: 14px;
+    }
+
+  .prompt a {
+    color: #4183c4;
+  }
 
 .question {
   min-width: 600px;
@@ -248,5 +320,3 @@ ul.dropdown.show {
       margin-left: auto;
       text-align: right;
     }
-
-

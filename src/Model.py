@@ -4,9 +4,7 @@ Model.py
 Describes all types for Gnuclicker.
 '''
 from flask.ext.sqlalchemy import SQLAlchemy
-from backend import app
-
-db = SQLAlchemy(app)
+from __init__ import db
 
 # Many to many table for tracking user enrollment in course as student.
 enrollments = db.Table('enrollments',
@@ -35,6 +33,13 @@ class User(db.Model):
     backref='students')
   instructs = db.relationship('Course', backref='instructor')
 
+  def __iter__(self):
+    yield ('userId', self.userId)
+    yield ('universityId', self.universityId)
+    yield ('name', self.name)
+    yield ('enrolledIn', self.enrolledIn)
+    yield ('instructs', self.instructs)
+
 class Course(db.Model):
   '''
   A course has a title and a single instructor. Multiple students are enrolled
@@ -52,6 +57,12 @@ class Course(db.Model):
   instructorId = db.Column(db.String, db.ForeignKey('user.userId'))
   lectures = db.relationship('Lecture', backref='course')
 
+  def __iter__(self):
+    yield ('courseId', self.courseId)
+    yield ('courseTitle', self.courseTitle)
+    yield ('instructorId', self.instructorId)
+    yield ('lectures', self.lectures)
+
 class Lecture(db.Model):
   '''
   A lecture is associated with a course. It contains multiple questions.
@@ -63,6 +74,7 @@ class Lecture(db.Model):
   '''
   lectureId = db.Column(db.String, primary_key = True)
   courseId = db.Column(db.String, db.ForeignKey('course.courseId'))
+  lectureTitle = db.Column(db.String)
   questions = db.relationship('Question', backref='lecture')
 
 class Question(db.Model):
@@ -84,34 +96,21 @@ class Question(db.Model):
   lectureId = db.Column(db.String, db.ForeignKey('lecture.lectureId'))
   title = db.Column(db.String)
   questionBody = db.Column(db.String)
-  choices = db.relationship('ChoiceSet', backref='question', uselist=False)
-  correctChoices = db.relationship('ChoiceSet', backref='question',
-    uselist=False)
+  choices = db.relationship('Choice', backref='question')
   rounds = db.relationship('Round', backref='question')
-
-class ChoiceSet(db.Model):
-  '''
-  A choice set is a set of possible answers.
-
-  Fields:
-  questionId : Question we're related to.
-  choices : Many choices in one choice set.
-  '''
-  choiceSetId = db.Column(db.String, primary_key = True)
-  questionId = db.Column(db.String, db.ForeignKey('question.questionId'))
-  choices = db.relationship('Choice', backref='choiceSet')
 
 class Choice(db.Model):
   '''
-  An answer choice is a string. It is associated with a set of possible answers.
+  An answer choice is a string. It is associated with a question.
 
   Fields:
   choiceId : UUID Primary Key.
-  choiceSetId : Choice set that this choice is a part of.
+  questionId : Question that this choice is associated with.
   choiceStr : Possible response to question.
   '''
   choiceId = db.Column(db.String, primary_key = True)
-  choiceSetId = db.Column(db.String, db.ForeignKey('choice_set.choiceSetId'))
+  questionId = db.Column(db.String, db.ForeignKey('question.questionId'))
+  choiceValid = db.Column(db.Integer)
   choiceStr = db.Column(db.String)
 
 class Round(db.Model):
@@ -130,7 +129,7 @@ class Round(db.Model):
   questionId = db.Column(db.String, db.ForeignKey('question.questionId'))
   startTime = db.Column(db.Integer)
   endTime = db.Column(db.Integer)
-  responses = db.relationship('Response', backref='round')
+  responses = db.relationship('Response', backref='roundFor')
 
 class Response(db.Model):
   '''
