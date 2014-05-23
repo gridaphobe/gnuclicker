@@ -1,11 +1,23 @@
+#! /usr/bin/env python
 from flask import Flask, jsonify, make_response
 from flask.ext.restful import Api, Resource, reqparse
 from flask.ext.sqlalchemy import SQLAlchemy
 import uuid
 import config
-from __init__ import app, db
+from Model import db, User, Course
+from __init__ import app
 
 api = Api(app)
+
+def getArg(args, name):
+  return args.get(name, None)
+
+
+def myJson(o):
+  if (isinstance(o, list)):
+    return map(lambda x: myJson(x), o)
+  else:
+    return jsonify(o)
 
 class CoursesListApi(Resource):
   def __init__(self):
@@ -19,8 +31,27 @@ class CoursesListApi(Resource):
     Return all courses matching the given student and instructor id filters.
     '''
     args = self.reqparse.parse_args()
+    studentId = getArg(args, "studentId")
+    instructorId = getArg(args, "instructorId")
+
+    res = None
+
+    if (studentId and instructorId):
+      # Return any classes thought by instructor and taken by student
+      res = User.query.get(studentId).enrolledIn.filter(\
+        Course.instructorId == instructorId)
+    elif (studentId):
+      # Return any classes thought by instructor and taken by student
+      res = User.query.get(studentId).enrolledIn
+    elif (instructorId):
+      # Return any classes thought by instructor and taken by student
+      res = User.query.get(instructorId).instructs
+    else:
+      # Return all classes
+      res = Course.query.all()
+
     # TODO: Implement
-    return jsonify(args)
+    return myJson(res)
 
 api.add_resource(CoursesListApi, '/courses', endpoint='courses_list')
 
