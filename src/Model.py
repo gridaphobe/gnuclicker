@@ -4,9 +4,7 @@ Model.py
 Describes all types for Gnuclicker.
 '''
 from flask.ext.sqlalchemy import SQLAlchemy
-from backend import app
-
-db = SQLAlchemy(app)
+from __init__ import db
 
 # Many to many table for tracking user enrollment in course as student.
 enrollments = db.Table('enrollments',
@@ -85,7 +83,7 @@ class Question(db.Model):
   title = db.Column(db.String)
   questionBody = db.Column(db.String)
   choices = db.relationship('ChoiceSet', backref='question', uselist=False)
-  correctChoices = db.relationship('ChoiceSet', backref='question',
+  correctChoices = db.relationship('ChoiceSet',
     uselist=False)
   rounds = db.relationship('Round', backref='question')
 
