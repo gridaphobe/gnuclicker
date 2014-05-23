@@ -4,7 +4,7 @@
     var obj = this.nextSibling;
     while(obj.nodeType != 1)
       obj = obj.nextSibling;
-  
+
     obj.classList.toggle("show");
     obj.parentNode.classList.toggle("sel");
 

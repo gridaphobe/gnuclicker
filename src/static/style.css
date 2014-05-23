@@ -15,6 +15,10 @@ a {
   color: #222;
 }
 
+.hidden {
+  display: none;
+}
+
 button {
   background-color: #eee;
   text-shadow: 0 1px 0 rgba(255,255,255,0.9);
@@ -292,6 +296,12 @@ ul.dropdown.show {
       padding: 10px;
       border-radius: 3px;
       font-family: 'Comic Sans MS';
+    }
+
+    .question > .body > .answer.active {
+      background-image: linear-gradient(to bottom, #F5C08B 0, #EF8526 100%);
+      border-color: #EF8526;
+      text-shadow: 0 -1px 0 #777777;
     }
 
     .question > .body > .space {
