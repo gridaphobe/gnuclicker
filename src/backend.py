@@ -3,10 +3,7 @@ from flask.ext.restful import Api, Resource, reqparse
 from flask.ext.sqlalchemy import SQLAlchemy
 import uuid
 import config
-
-app = Flask(config.APP_NAME)
-app.config.from_object(config)
-db = SQLAlchemy(app)
+from __init__ import app, db
 
 api = Api(app)
 
