@@ -57,6 +57,12 @@ class Course(db.Model):
   instructorId = db.Column(db.String, db.ForeignKey('user.userId'))
   lectures = db.relationship('Lecture', backref='course')
 
+  def __iter__(self):
+    yield ('courseId', self.courseId)
+    yield ('courseTitle', self.courseTitle)
+    yield ('instructorId', self.instructorId)
+    yield ('lectures', self.lectures)
+
 class Lecture(db.Model):
   '''
   A lecture is associated with a course. It contains multiple questions.
