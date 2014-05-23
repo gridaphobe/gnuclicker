@@ -24,7 +24,7 @@ for course in courses:
   for lecture in course.lectures:
     print("\tLecture Title: %s" % (lecture.lectureTitle))
     for question in lecture.questions:
-      print("\tQuestion: %s: %s" % (question.title, question.questionBody))
+      print("\tQuestion: %s (%s): %s" % (question.title, question.questionId, question.questionBody))
       allChoices = "[ %s ]" % (" ".join([choice.choiceStr for choice in
         question.choices]))
       correctChoices = "[ %s ]" % (" ".join([choice.choiceStr for choice in

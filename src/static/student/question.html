@@ -4,11 +4,11 @@
   <meta charset="utf-8">
   <link rel="stylesheet" type="text/css" href="../style.css" />
   <title>Home</title>
+  <script type="text/javascript" src="../js/jquery-1.11.1.min.js"></script>
   <script type="text/javascript" src="../js/ui.js"></script>
   <script type="text/javascript" src="../js/student.js"></script>
 </head>
 <body>
-
 <div class="page portal">
   <div class="nav">
     <div class="item brand"><a href="../">Gnu/Clicker</a></div>
@@ -53,9 +53,12 @@
         </div>
       </div>
       <div class="footer">
-        <div class="submit">
-          <img id="flower-gear" class="hidden" src="http://www.millan.net/anims/gifs/snurra.gif">
-          <!-- <button type="submit">Submit</button> -->
+        <div id="submitting" class="hidden">
+          <img id="flower-gear" src="http://www.millan.net/anims/gifs/snurra.gif">
+        </div>
+        <div id="submitted" class="hidden">
+          <img id="check-mark" src="/static/check-mark-3-64.png">
+          Your answer "<span id="submitted-answer"></span>" has been successfully submitted.
         </div>
         <div class="timer">
           Timer: <span id="timer">29</span> sec
