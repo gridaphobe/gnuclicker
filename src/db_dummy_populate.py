@@ -3,6 +3,7 @@
 from __init__ import db
 from Model import *
 import uuid
+import datetime
 
 '''
 Create dummy objects to populate the database for testing.
@@ -44,7 +45,7 @@ user2.enrolledIn.append(course1)
 # Add a lecture to user2's class.
 lecture1Id = uuid.uuid4()
 lecture1 = Lecture(lectureId=str(lecture1Id), course=course2,
-  lectureTitle="Administrivia")
+  lectureTitle="Administrivia", date=datetime.datetime.utcnow())
 
 # Add lecture to db session.
 db.session.add(lecture1)
