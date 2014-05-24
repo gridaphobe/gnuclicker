@@ -26,7 +26,8 @@ for course in courses:
     print("\tLecture Tags: %s" % (" ".join([tag.tagText for tag in
       lecture.tags])))
     for question in lecture.questions:
-      print("\tQuestion: %s: %s" % (question.title, question.questionBody))
+      print("\tQuestion: %s (%s): %s" % (question.title, question.questionId,
+        question.questionBody))
       print("\tQuestion Tags: %s" % (" ".join([tag.tagText for tag in
         question.tags])))
       allChoices = "[ %s ]" % (" ".join([choice.choiceStr for choice in
