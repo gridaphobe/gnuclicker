@@ -12,12 +12,33 @@ enrollments = db.Table('enrollments',
   db.Column('course_id', db.String, db.ForeignKey('course.courseId'))
 )
 
+questionTags = db.Table('questionTags',
+  db.Column('question_id', db.String, db.ForeignKey('question.questionId')),
+  db.Column('tag_id', db.String, db.ForeignKey('tag.tagId'))
+)
+
+lectureTags = db.Table('lectureTags',
+  db.Column('lecture_id', db.String, db.ForeignKey('lecture.lectureId')),
+  db.Column('tag_id', db.String, db.ForeignKey('tag.tagId'))
+)
+
+class Tag(db.Model):
+  '''
+  Semantic tag. Associated with many questions and lectures, each of which can
+  have many tags.
+  '''
+  tagId = db.Column(db.String, primary_key = True)
+  tagText = db.Column(db.String)
+  questions = db.relationship('Question', secondary=questionTags,
+    backref='tags')
+  lectures = db.relationship('Lecture', secondary=lectureTags,
+    backref='tags')
+
 class User(db.Model):
   '''
   Describes a user in the system. A user may either be a teacher or a student in
   relation to a course; for example, teach one course, and be enrolled in two.
   However, a user cannot be both a teacher and a student for the same course.
-
 
   Fields:
   userId: UUID Primary Key.
@@ -79,6 +100,7 @@ class Lecture(db.Model):
   courseId = db.Column(db.String, db.ForeignKey('course.courseId'))
   lectureTitle = db.Column(db.String)
   questions = db.relationship('Question', backref='lecture')
+  date = db.Column(db.DateTime)
 
   def __iter__(self):
     yield ('lectureId', self.lectureId)

@@ -55,8 +55,25 @@ question1 = Question(questionId=str(q1Id), lecture=lecture1,
   title="Bro, do you even aerodynamic lift?",
   questionBody="What is the unladen airspeed of a swallow?")
 
-# Add question to session.
+# Create tags
+tag1Id = uuid.uuid4()
+tag2Id = uuid.uuid4()
+tag3Id = uuid.uuid4()
+tag1 = Tag(tagId=str(tag1Id), tagText="much_tag")
+tag2 = Tag(tagId=str(tag2Id), tagText="wow")
+tag3 = Tag(tagId=str(tag3Id), tagText="such_question")
+
+# Associate tags with question and lecture.
+question1.tags.append(tag3)
+question1.tags.append(tag2)
+lecture1.tags.append(tag1)
+lecture1.tags.append(tag2)
+
+# Add question and tags to session.
 db.session.add(question1)
+db.session.add(tag1)
+db.session.add(tag2)
+db.session.add(tag3)
 
 # Define answer choices.
 choice1Id = uuid.uuid4()
