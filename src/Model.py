@@ -129,6 +129,7 @@ class Question(db.Model):
   questionBody = db.Column(db.String)
   choices = db.relationship('Choice', backref='question')
   rounds = db.relationship('Round', backref='question')
+  activeRound = db.Column(db.String)
 
   def __iter__(self):
     yield ('questionId', self.questionId)

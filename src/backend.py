@@ -7,6 +7,7 @@ import config
 from Model import db, User, Course
 from __init__ import app
 import datetime
+import time
 from copy import copy
 
 api = Api(app)
@@ -378,19 +379,48 @@ api.add_resource(ResponseRoundsApi,
 class ResponseApi(Resource):
   def __init__(self):
     self.reqparse = reqparse.RequestParser()
-    self.reqparse.add_argument('responseId', type=str, required=True)
+    self.reqparse.add_argument('choiceId', type=str, required=True)
     super(ResponseApi, self).__init__()
+
+  def getSomeStudentInCourse(self, course):
+    # XXX Temporary hack till we have user logins.
+    return course.students[0]
 
   def post(self, courseId, questionId):
     '''
     Given the course and question, note that the current user submitted the
     specified answer.
     '''
-    # TODO: Implement.
-    # Student response to question is recorded as part of current round (current
-    # round is set via call to round start api).
-    # If no round is active, data is discarded.
-    return None
+    course = Course.query.get(courseId)
+    question = Question.query.get(questionId)
+    # Check that the question belongs to the course.
+    if question.lecture.course != course:
+      return None
+
+    # Check if there's  an active round.
+    if question.activeRound == "":
+      return None
+
+    choice = Choice.query.get(choiceId)
+    # Make sure choice corresponds to question.
+    if choice.question != question:
+      return None
+
+    # TODO: Once user logins/identities are implemented, we'll pull the student
+    # ID from the session. For now, we hardcode it as being the answer
+    # for...some random student in the class.
+    student = self.getSomeStudentInCourse(course)
+
+    # Alright, record the answer for this round for this question.
+    args = self.reqparse.parse_args()
+    response = Response(
+      responseId=str(uuid.uuid4()),
+      roundFor=Round.query.get(question.activeRound),
+      studentId=studentId,
+      choiceId=choice.choiceId)
+    db.session.add(response)
+    db.session.commit()
+    return myJson(response)
 
 api.add_resource(ResponseApi,
   '/courses/<string:courseId>/question/<string:questionId>/respond',
@@ -401,9 +431,25 @@ class RoundStartApi(Resource):
     '''
     Given the course id and question, start a round of questioning.
     '''
-    # TODO: Implement.
-    # If round already active, return error. Else start round.
-    return None
+    course = Course.query.get(courseId)
+    question = Question.query.get(questionId)
+    # Check that the question belongs to the course.
+    if question.lecture.course != course:
+      return None
+
+    # Check if there's already an active round.
+    if question.activeRound != "":
+      return None
+
+    # Alright, create a round starting *now*, ending unspecified, add it to the
+    # table of rounds, and set it as the active round for the question.
+    now = int(time.time())
+    answerRound = Round(roundId=str(uuid.uuid4()), question=question,
+      startTime=now, endTime=-1)
+    question.activeRound = answerRound.roundId
+    db.session.add(answerRound)
+    # Done, return round.
+    return myJson(answerRound)
 
 api.add_resource(RoundStartApi,
   '/courses/<string:courseId>/question/<string:questionId>/start',
@@ -414,10 +460,23 @@ class RoundEndApi(Resource):
     '''
     Given the course id and question, end the round of questioning.
     '''
-    # TODO: Implement.
-    # If round not active, return error, else end round. Need to determine where
-    # this state should live.
-    return None
+    course = Course.query.get(courseId)
+    question = Question.query.get(questionId)
+    # Check that the question belongs to the course.
+    if question.lecture.course != course:
+      return None
+
+    # Check if there's no active round.
+    if question.activeRound == "":
+      return None
+
+    # Alright, close this round.
+    now = int(time.time())
+    answerRound = Round.query.get(question.activeRound)
+    answerRound.endTime = now
+    question.activeRound = ""
+    db.session.commit()
+    return myJson(answerRound)
 
 api.add_resource(RoundEndApi,
   '/courses/<string:courseId>/question/<string:questionId>/end',
