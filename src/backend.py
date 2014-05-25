@@ -92,8 +92,11 @@ class CoursesListApi(Resource):
       # Return all classes
       res = Course.query.all()
 
-    return myJson2(res, [{"courseId": unicode, "courseTitle":unicode, "instructorId": unicode}])
-
+    return myJson2(res, [
+      { "courseId": unicode,
+        "courseTitle":unicode,
+        "instructorId": unicode }])
+ 
 api.add_resource(CoursesListApi, '/courses', endpoint='courses_list')
 
 class LecturesListApi(Resource):
@@ -102,7 +105,14 @@ class LecturesListApi(Resource):
     Return all lectures for the given course.
     '''
     course = Course.query.get(courseId)
-    return myJson(course.lectures)
+    if course:
+      return myJson2(course.lectures, [
+        { "courseId": unicode,
+          "lectureTitle": unicode,
+          "lectureId": unicode,
+          "date": unicode }])
+    else:
+      return error("Unknown course id %s" % courseId)
 
 api.add_resource(LecturesListApi, '/courses/<string:courseId>/lectures',
   endpoint='lectures_list')

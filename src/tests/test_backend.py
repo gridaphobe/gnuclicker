@@ -12,6 +12,10 @@ from config import basedir
 from backend import app
 from Model import db, User
 from db_dummy_populate import * 
+from json import dumps
+from flask import jsonify
+
+def jsonifyTime(t):     return t.strftime("%a, %d %b %Y %H:%M:%S GMT")
 
 class MatchAny:     pass;
 #
@@ -51,10 +55,27 @@ class TestCase(unittest.TestCase):
         return json.loads(rv.data)
 
     def assertJSON(self, url, obj):
-        assert self.getJSON(url) == { u'res' : obj }
+        json = self.getJSON(url)
+        if (json != { u'res' : obj }):
+            print "Error: Mismatch between expected: \n", { u'res' : obj },\
+                "\n and actual: \n", json
+
+            assert False
 
     def assertError(self, url, msg):
-        assert self.getJSON(url) == { u'error' : msg }
+        json = self.getJSON(url)
+
+        if ('res' in json):
+            print "Expected error message: \n", msg, \
+                "\n but instead got result: \n", res
+
+        if ('error' not in json):
+            print "Error is not set!"
+
+        if (json['error'] != msg):
+            print "Wrong error message expected: ", msg, " got: ", json['error']
+
+        assert json == { u'error' : msg }
 
     def setUp(self):
         app.config['TESTING'] = True
@@ -69,7 +90,7 @@ class TestCase(unittest.TestCase):
 
     def test_CoursesListApi(self):
         # Empty courses list
-        assert self.getJSON("/courses") == {'res' : [] }
+        self.assertJSON("/courses", [])
         vals = dbPopulateDummyValues(db)
 
         # All Courses 
@@ -100,6 +121,17 @@ class TestCase(unittest.TestCase):
         self.assertJSON("/courses?studentId=" + vals.user4.userId, [])
         self.assertError("/courses?studentId=" + "BADVAL", \
             "Unknown student id BADVAL")
+
+    def test_LecturesListApi(self):
+        vals = dbPopulateDummyValues(db)
+        self.assertJSON("/courses/" + vals.course1.courseId + "/lectures", [])
+        self.assertJSON("/courses/" + vals.course2.courseId + "/lectures", [\
+            { "courseId" : vals.course2.courseId, \
+              "date"     : jsonifyTime(vals.lecture1.date), \
+              "lectureId": vals.lecture1.lectureId, \
+              "lectureTitle" : vals.lecture1.lectureTitle
+            }])
+        self.assertError("/courses/BADVAL/lectures", "Unknown course id BADVAL")
 
 if __name__ == '__main__':
     unittest.main()
