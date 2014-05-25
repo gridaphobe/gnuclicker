@@ -168,7 +168,15 @@ class UserApi(Resource):
     '''
     Return user details for specified user.
     '''
-    return myJson(User.query.get(userId))
+    user = User.query.get(userId)
+    if (user):
+      return myJson2(user,
+        { 'userId': unicode,
+          'universityId': unicode,
+          'name': unicode
+        })
+    else:
+      return error("Unknown user id %s" % userId)
 
 api.add_resource(UserApi, '/users/<string:userId>', endpoint='user')
 

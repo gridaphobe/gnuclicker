@@ -17,31 +17,25 @@ from flask import jsonify
 
 def jsonifyTime(t):     return t.strftime("%a, %d %b %Y %H:%M:%S GMT")
 
-class MatchAny:     pass;
 #
-# Insure that the object obj matches the given template. Recursively
-# check embedded lists and dictionaries.
+# Equal Modulo Order
 #
-# This function allows us to check that returned JSON matches the expectation,
-# modulo differing UUIDs
-#
-def matches(obj, template):
-    if (template == MatchAny):
-        return True
-
-    if (type(obj) != type(template)):
-        return False
-
+def equalModuloOrder(obj, template):
     if isinstance(template, list):
-        if (len(obj) != len(template)):
+        if (not isinstance(obj, list) or len(obj) != len(template)):
             return False
 
+        template.sort()
+        obj.sort()
         return reduce(lambda acc, el:   acc and el, 
-            map(lambda pair:  matches(pair[0], pair[1]), zip(obj, template)),
-            True)
+            map(lambda pair:  equalModuloOrder(pair[0], pair[1]),\
+                zip(obj, template)), True)
     elif isinstance(template, dict):
+        if (not isinstance(obj, dict)):
+            return False 
+
         for k in template.keys():
-            if (k not in obj or (not matches(obj[k], template[k]))):
+            if not equalModuloOrder(obj[k], template[k]):
                 return False
         return True
     else:
@@ -56,7 +50,7 @@ class TestCase(unittest.TestCase):
 
     def assertJSON(self, url, obj):
         json = self.getJSON(url)
-        if (json != { u'res' : obj }):
+        if (not equalModuloOrder(json, { u'res' : obj })):
             print "Error: Mismatch between expected: \n", { u'res' : obj },\
                 "\n and actual: \n", json
 
@@ -153,15 +147,25 @@ class TestCase(unittest.TestCase):
 
         self.assertJSON("/courses/" + vals.course2.courseId + \
             "/students?lectureId=" + vals.lecture1.lectureId, [\
-            { 'universityId': vals.course2.students[0].universityId,
-              'userId': vals.course2.students[0].userId,
-              'name': vals.course2.students[0].name,
-            },
             { 'universityId': vals.course2.students[1].universityId,
               'userId': vals.course2.students[1].userId,
               'name': vals.course2.students[1].name,
+            },
+            { 'universityId': vals.course2.students[0].universityId,
+              'userId': vals.course2.students[0].userId,
+              'name': vals.course2.students[0].name,
             }])
 
+    def test_UserApi(self):
+        vals = dbPopulateDummyValues(db)
+        self.assertJSON("/users/" + vals.user1.userId,
+            {
+                'userId': vals.user1.userId,
+                'universityId': vals.user1.universityId,
+                'name': vals.user1.name,
+            })
+
+        self.assertError("/users/BADVAL", "Unknown user id BADVAL")
 
 if __name__ == '__main__':
     unittest.main()
