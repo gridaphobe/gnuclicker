@@ -17,18 +17,39 @@ def getArg(args, name):
 def objectify(o):
   if (isinstance(o, list)):
     return map(lambda x: objectify(x), o)
-  elif (hasattr(o, "__dict__")):
-    res = copy(o.__dict__)
-    if ("_sa_instance_state" in res):
-        del res["_sa_instance_state"]
+  elif (isinstance(o, db.Model)):
+    res = {}
+    for k in o.__dict__.keys():
+        if (k == "_sa_instance_state"):     continue
+        res[k] = objectify(o.__dict__[k])
     return res
   else:
-    return res
+    return o 
 
+def objectify2(o, t):
+  if (isinstance(t, dict)):
+    res = {}
+    for k in t.keys():
+        res[k] = objectify2(getattr(o, k), t[k])
+    return res
+  elif (isinstance(t, list)):
+    return map(lambda x: objectify2(x, t[0]), o)
+  else:
+    return o
+    
 # jsonify() seems to insist that no arrays can be used as top-level
 # json objects. To satisfy it, for now wrap everything in a top-level
 # { res: ... } object
-def myJson(o): return jsonify(res = objectify(o))
+def myJson(o): 
+    print objectify(o)
+    return jsonify(res = objectify(o))
+
+def myJson2(o, t): 
+    return jsonify(res = objectify2(o, t))
+
+def error(msg):
+    return jsonify(error = msg)
+
 
 class CoursesListApi(Resource):
   def __init__(self):
@@ -45,23 +66,32 @@ class CoursesListApi(Resource):
     studentId = getArg(args, "studentId")
     instructorId = getArg(args, "instructorId")
 
+    if (studentId):
+      student = User.query.get(studentId)
+      if (student == None):
+        return error("Unknown student id %s" % (studentId))
+
+    if (instructorId):
+      instructor = User.query.get(instructorId)
+      if (instructor == None):
+        return error("Unknown instructor id %s" % (instructorId))
+        
     res = None
 
     if (studentId and instructorId):
       # Return any classes thought by instructor and taken by student
-      res = User.query.get(studentId).enrolledIn.filter(\
-        Course.instructorId == instructorId)
+      res = student.enrolledIn.filter(Course.instructorId == instructorId)
     elif (studentId):
-      # Return any classes thought by instructor and taken by student
-      res = User.query.get(studentId).enrolledIn
+      # Return any classes taken by student
+      res = student.enrolledIn
     elif (instructorId):
-      # Return any classes thought by instructor and taken by student
-      res = User.query.get(instructorId).instructs
+      # Return any classes thought by instructor 
+      res = instructor.instructs
     else:
       # Return all classes
       res = Course.query.all()
 
-    return myJson(res)
+    return myJson2(res, [{"courseId": unicode, "courseTitle":unicode, "instructorId": unicode}])
 
 api.add_resource(CoursesListApi, '/courses', endpoint='courses_list')
 
