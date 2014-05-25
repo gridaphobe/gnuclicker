@@ -7,18 +7,28 @@ import config
 from Model import db, User, Course
 from __init__ import app
 import datetime
+from copy import copy
 
 api = Api(app)
 
 def getArg(args, name):
   return args.get(name, None)
 
-def myJson(o):
-  # TODO: Fix awful hack.
+def objectify(o):
   if (isinstance(o, list)):
-    return map(lambda x: myJson(x), o)
+    return map(lambda x: objectify(x), o)
+  elif (hasattr(o, "__dict__")):
+    res = copy(o.__dict__)
+    if ("_sa_instance_state" in res):
+        del res["_sa_instance_state"]
+    return res
   else:
-    return jsonify(o).response
+    return res
+
+# jsonify() seems to insist that no arrays can be used as top-level
+# json objects. To satisfy it, for now wrap everything in a top-level
+# { res: ... } object
+def myJson(o): return jsonify(res = objectify(o))
 
 class CoursesListApi(Resource):
   def __init__(self):
