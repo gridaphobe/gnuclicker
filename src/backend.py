@@ -4,7 +4,7 @@ from flask.ext.restful import Api, Resource, reqparse
 from flask.ext.sqlalchemy import SQLAlchemy
 import uuid
 import config
-from Model import db, User, Course
+from Model import db, User, Course, Lecture
 from __init__ import app
 import datetime
 import time
@@ -131,22 +131,34 @@ class CourseStudentManifestApi(Resource):
     args = self.reqparse.parse_args()
     lectureId = getArg(args, "lectureId")
     course = Course.query.get(courseId)
+    userDesc = [{ 'userId': unicode, 'universityId': unicode, 'name': unicode }]
+
+    if (course == None):
+      return error("Unknown course id %s" % courseId)
+
     if lectureId is None:
       # Return all students enrolled in class.
-      return myJson(course.students)
+      return myJson2(course.students, userDesc)
     else:
       # Return all students attending a lecture.
-      lecture = Lecture.query.get("lectureId")
+      lecture = Lecture.query.get(lectureId)
+
+      if (not lecture):
+        return error("Unknown lecture id %s for course %s" % \
+          (lectureId, courseId))
+
       if lecture.course != course:
         # Invalid lecture for this course.
-        return None
+        return error("Invalid lecture with id %s in course %s" % \
+          (lectureId, courseId))
+
       students = set()
       for question in lecture.questions:
         for answerRound in question.rounds:
           for response in answerRound.responses:
-            students.add(response.studentId)
+            students.add(User.query.get(response.studentId))
 
-      return myJson(students)
+      return myJson2(list(students), userDesc)
 
 api.add_resource(CourseStudentManifestApi,
   '/courses/<string:courseId>/students', endpoint='course_student_manifest')

@@ -133,5 +133,35 @@ class TestCase(unittest.TestCase):
             }])
         self.assertError("/courses/BADVAL/lectures", "Unknown course id BADVAL")
 
+    def test_CourseStudentManifestApi(self):
+        vals = dbPopulateDummyValues(db)
+        self.assertJSON("/courses/" + vals.course1.courseId + "/students", [\
+            { 'universityId': vals.course1.students[0].universityId,
+              'userId': vals.course1.students[0].userId,
+              'name': vals.course1.students[0].name,
+            },
+            { 'universityId': vals.course1.students[1].universityId,
+              'userId': vals.course1.students[1].userId,
+              'name': vals.course1.students[1].name,
+            }])
+
+        self.assertError("/courses/BADVAL/students", "Unknown course id BADVAL")
+
+        self.assertError("/courses/" + vals.course1.courseId + \
+            "/students?lectureId=BADVAL", \
+            "Unknown lecture id BADVAL for course %s" % (vals.course1.courseId))
+
+        self.assertJSON("/courses/" + vals.course2.courseId + \
+            "/students?lectureId=" + vals.lecture1.lectureId, [\
+            { 'universityId': vals.course2.students[0].universityId,
+              'userId': vals.course2.students[0].userId,
+              'name': vals.course2.students[0].name,
+            },
+            { 'universityId': vals.course2.students[1].universityId,
+              'userId': vals.course2.students[1].userId,
+              'name': vals.course2.students[1].name,
+            }])
+
+
 if __name__ == '__main__':
     unittest.main()
