@@ -56,6 +56,17 @@ class TestCase(unittest.TestCase):
 
             assert False
 
+    def assertPost(self, url):
+        rv =self.app.post(url)
+        print rv.status_code
+        print rv.data
+        assert rv.status_code == 200
+        print rv
+
+    def assertMissingParam(self, url):
+        rv =self.app.post(url)
+        assert rv.status_code == 400
+
     def assertError(self, url, msg):
         json = self.getJSON(url)
 
@@ -94,7 +105,10 @@ class TestCase(unittest.TestCase):
               u'instructorId': vals.course1.instructorId}, \
              {u'courseId': vals.course2.courseId, \
               u'courseTitle': u'CSE210', \
-              u'instructorId': vals.course2.instructorId}])
+              u'instructorId': vals.course2.instructorId},
+             {u'courseId': vals.course3.courseId, \
+              u'courseTitle': vals.course3.courseTitle, \
+              u'instructorId': vals.course3.instructorId}])
 
         # All Courses for a given instructor
         self.assertJSON("/courses?instructorId=" + vals.course1.instructorId, 
@@ -166,6 +180,84 @@ class TestCase(unittest.TestCase):
             })
 
         self.assertError("/users/BADVAL", "Unknown user id BADVAL")
+
+    def test_QuestionApi_get(self):
+        vals = dbPopulateDummyValues(db)
+        self.assertError("/courses/BADVAL/questions",\
+            "Unknown course id BADVAL")
+
+        def q(m):
+            return { 'questionId': m.questionId, 'title': m.title, \
+                'tags': list(map(lambda t: \
+                    { 'tagId': t.tagId, 'tagText': t.tagText }, m.tags)), \
+                'questionBody': m.questionBody, 'lectureId': m.lectureId }
+
+        self.assertJSON("/courses/" + vals.course3.courseId + "/questions", \
+            [q(vals.question2), q(vals.question3), q(vals.question4) ])
+
+        self.assertJSON("/courses/" + vals.course3.courseId + \
+            "/questions?lectureId=" + vals.lecture2.lectureId, \
+            [q(vals.question2), q(vals.question3), q(vals.question4) ])
+
+        self.assertJSON("/courses/" + vals.course3.courseId + \
+            "/questions?lectureId=" + vals.lecture3.lectureId, \
+            [])
+
+        self.assertError("/courses/" + vals.course3.courseId + \
+            "/questions?lectureId=BADVAL", \
+            "Unknown lecture id BADVAL")
+
+        self.assertError("/courses/" + vals.course3.courseId + \
+            "/questions?lectureId=" + vals.lecture1.lectureId, \
+            "Lecture %s belongs to different course" % vals.lecture1.lectureId)
+
+        self.assertJSON("/courses/" + vals.course3.courseId + \
+            "/questions?lectureId=" + vals.lecture2.lectureId + "&tag=BADTAG",\
+            [])
+
+        self.assertJSON("/courses/" + vals.course3.courseId + \
+            "/questions?lectureId=" + vals.lecture2.lectureId + '&tag=wow',\
+            [q(vals.question2), q(vals.question3) ])
+
+        self.assertJSON("/courses/" + vals.course3.courseId + \
+            "/questions?lectureId=" + vals.lecture2.lectureId + \
+            '&tag=much_tag',
+            [q(vals.question2) ])
+
+        self.assertJSON("/courses/" + vals.course3.courseId + \
+            "/questions?lectureId=" + vals.lecture2.lectureId + \
+            '&tag=much_tag&tag=wow',
+            [q(vals.question2) ])
+
+        self.assertJSON("/courses/" + vals.course3.courseId + \
+            "/questions?lectureId=" + vals.lecture2.lectureId + \
+            '&tag=much_tag&tag=BADTAG',
+            [])
+
+
+    def test_QuestionApi_post(self):
+        vals = dbPopulateDummyValues(db)
+        def q(m):
+            return { 'questionId': m.questionId, 'title': m.title, \
+                'tags': list(map(lambda t: \
+                    { 'tagId': t.tagId, 'tagText': t.tagText }, m.tags)), \
+                'questionBody': m.questionBody, 'lectureId': m.lectureId }
+
+        # Missing Parameters
+        self.assertMissingParam('/courses/BADVAL/questions')
+        self.assertMissingParam('/courses/BADVAL/questions?lectureId=A')
+        self.assertMissingParam('/courses/BADVAL/questions?lectureId=A'+ 
+            '&title=B')
+        self.assertMissingParam('/courses/BADVAL/questions?lectureId=A'+ 
+            '&title=B&body=C')
+        self.assertMissingParam('/courses/BADVAL/questions?lectureId=A'+ 
+            '&title=B&body=C&choices=D')
+
+        # Non-existing course
+        self.assertPost('/courses/BADVAL/questions?lectureId=A'+ 
+            '&title=B&body=C&choices=D&correct-choices')
+
+        
 
 if __name__ == '__main__':
     unittest.main()

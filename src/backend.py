@@ -15,18 +15,6 @@ api = Api(app)
 def getArg(args, name):
   return args.get(name, None)
 
-def objectify(o):
-  if (isinstance(o, list)):
-    return map(lambda x: objectify(x), o)
-  elif (isinstance(o, db.Model)):
-    res = {}
-    for k in o.__dict__.keys():
-        if (k == "_sa_instance_state"):     continue
-        res[k] = objectify(o.__dict__[k])
-    return res
-  else:
-    return o 
-
 def objectify2(o, t):
   if (isinstance(t, dict)):
     res = {}
@@ -37,16 +25,32 @@ def objectify2(o, t):
     return map(lambda x: objectify2(x, t[0]), o)
   else:
     return o
+
+def objectify3(o, t):
+  if (isinstance(t, tuple)):
+    res = {}
+    for k in t:
+      if (isinstance(k, tuple)):
+        res[k[0]] = objectify3(getattr(o, k[0]), k[1])
+      else:
+        res[k] = getattr(o, k)
+    return res
+  elif (isinstance(t, list)):
+    return map(lambda x: objectify3(x, t[0]), o)
+  else:
+    return o
     
 # jsonify() seems to insist that no arrays can be used as top-level
 # json objects. To satisfy it, for now wrap everything in a top-level
 # { res: ... } object
 def myJson(o): 
-    print objectify(o)
     return jsonify(res = objectify(o))
 
-def myJson2(o, t): 
+def myJson3(o, t): 
     return jsonify(res = objectify2(o, t))
+
+def myJson3(o, t): 
+    return jsonify(res = objectify3(o, t))
 
 def error(msg):
     return jsonify(error = msg)
@@ -92,10 +96,7 @@ class CoursesListApi(Resource):
       # Return all classes
       res = Course.query.all()
 
-    return myJson2(res, [
-      { "courseId": unicode,
-        "courseTitle":unicode,
-        "instructorId": unicode }])
+    return myJson3(res, [("courseId", "courseTitle", "instructorId")])
  
 api.add_resource(CoursesListApi, '/courses', endpoint='courses_list')
 
@@ -106,11 +107,8 @@ class LecturesListApi(Resource):
     '''
     course = Course.query.get(courseId)
     if course:
-      return myJson2(course.lectures, [
-        { "courseId": unicode,
-          "lectureTitle": unicode,
-          "lectureId": unicode,
-          "date": unicode }])
+      return myJson3(course.lectures, [('courseId', 'lectureTitle', \
+        'lectureId', 'date' )])
     else:
       return error("Unknown course id %s" % courseId)
 
@@ -131,14 +129,14 @@ class CourseStudentManifestApi(Resource):
     args = self.reqparse.parse_args()
     lectureId = getArg(args, "lectureId")
     course = Course.query.get(courseId)
-    userDesc = [{ 'userId': unicode, 'universityId': unicode, 'name': unicode }]
+    userDesc = [( 'userId' , 'universityId', 'name' )]
 
     if (course == None):
       return error("Unknown course id %s" % courseId)
 
     if lectureId is None:
       # Return all students enrolled in class.
-      return myJson2(course.students, userDesc)
+      return myJson3(course.students, userDesc)
     else:
       # Return all students attending a lecture.
       lecture = Lecture.query.get(lectureId)
@@ -158,7 +156,7 @@ class CourseStudentManifestApi(Resource):
           for response in answerRound.responses:
             students.add(User.query.get(response.studentId))
 
-      return myJson2(list(students), userDesc)
+      return myJson3(list(students), userDesc)
 
 api.add_resource(CourseStudentManifestApi,
   '/courses/<string:courseId>/students', endpoint='course_student_manifest')
@@ -170,11 +168,7 @@ class UserApi(Resource):
     '''
     user = User.query.get(userId)
     if (user):
-      return myJson2(user,
-        { 'userId': unicode,
-          'universityId': unicode,
-          'name': unicode
-        })
+      return myJson3(user, ( 'userId', 'universityId', 'name' ))
     else:
       return error("Unknown user id %s" % userId)
 
@@ -207,8 +201,14 @@ class QuestionsApi(Resource):
     '''
     args = self.getReqparse.parse_args()
     lectureId = getArg(args, "lectureId")
-    tags = set(getArg(args, "tag"))
+    rawTags = getArg(args, "tag")
+    tags = set(rawTags if rawTags else [])
     course = Course.query.get(courseId)
+    qDesc = [('questionId', 'lectureId', 'title', \
+      'questionBody', ('tags', [('tagId', 'tagText')]))]
+
+    if course == None:
+      return error("Unknown course id %s" % courseId)
 
     if lectureId is None:
       # Get all questions for course across all lectures.
@@ -221,20 +221,23 @@ class QuestionsApi(Resource):
             questionTags = set([tag.tagText for tag in question.tags])
             if tags <= questionTags:
               questions.append(question)
-      return myJson(questions)
+      return myJson3(questions, qDesc)
     else:
       lecture = Lecture.query.get(lectureId)
+      if (not lecture):
+        return error("Unknown lecture id %s" % lectureId)
       if lecture.course != course:
-        return None
+        return error("Lecture %s belongs to different course" % lectureId)
       if tags is None:
-        return myJson(lecture.questions)
+        return myJson3(lecture.questions, qDesc)
       else:
         questions = []
         for question in lecture.questions:
           questionTags = set([tag.tagText for tag in question.tags])
+
           if tags <= questionTags:
             questions.append(question)
-        return myJson(questions)
+        return myJson3(questions, qDesc)
 
   def post(self, courseId):
     '''

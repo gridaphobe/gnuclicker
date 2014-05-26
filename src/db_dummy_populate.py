@@ -33,14 +33,19 @@ def dbPopulateDummyValues(db):
     # Add courses. user2 and user1 teach a class each.
     course1Id = uuid.uuid4()
     course2Id = uuid.uuid4()
+    course3Id = uuid.uuid4()
+
     course1 = Course(courseId=str(course1Id), \
       courseTitle="Defense Against The Dark Arts", instructor=user1)
     course2 = Course(courseId=str(course2Id), courseTitle="CSE210",\
       instructor=user2)
+    course3 = Course(courseId=str(course3Id), courseTitle="RAINBOWS",\
+      instructor=user4)
 
     # Add courses to db session.
     db.session.add(course1)
     db.session.add(course2)
+    db.session.add(course3)
 
     # Note that user3 is a student in both classes. Note that user1 is a
     # student in user2's class and vice versa.
@@ -51,17 +56,39 @@ def dbPopulateDummyValues(db):
 
     # Add a lecture to user2's class.
     lecture1Id = uuid.uuid4()
+    lecture2Id = uuid.uuid4()
+    lecture3Id = uuid.uuid4()
     lecture1 = Lecture(lectureId=str(lecture1Id), course=course2,
       lectureTitle="Administrivia", date=datetime.datetime.utcnow())
 
+    lecture2 = Lecture(lectureId=str(lecture2Id), course=course3,
+      lectureTitle="NYAN", date=datetime.datetime.utcnow())
+    lecture3 = Lecture(lectureId=str(lecture3Id), course=course3,
+      lectureTitle="OTTER!", date=datetime.datetime.utcnow())
+
     # Add lecture to db session.
     db.session.add(lecture1)
+    db.session.add(lecture2)
+    db.session.add(lecture3)
 
     # Add question to that lecture.
     q1Id = uuid.uuid4()
+    q2Id = uuid.uuid4()
+    q3Id = uuid.uuid4()
+    q4Id = uuid.uuid4()
+
     question1 = Question(questionId=str(q1Id), lecture=lecture1,
       title="Bro, do you even aerodynamic lift?",
       questionBody="What is the unladen airspeed of a swallow?")
+    question2 = Question(questionId=str(q2Id), lecture=lecture2,
+      title="WTF MATE?",
+      questionBody="Fucking kangaroos.")
+    question3 = Question(questionId=str(q3Id), lecture=lecture2,
+      title="To be or not to be?",
+      questionBody="WHO CARES.")
+    question4 = Question(questionId=str(q4Id), lecture=lecture2,
+      title="How much wood does a woodchuck have to chuck to.. ooh SQUIRREL!",
+      questionBody="An ADHD Squirrel.")
 
     # Create tags
     tag1Id = uuid.uuid4()
@@ -74,11 +101,20 @@ def dbPopulateDummyValues(db):
     # Associate tags with question and lecture.
     question1.tags.append(tag3)
     question1.tags.append(tag2)
+
+    question2.tags.append(tag1)
+    question2.tags.append(tag2)
+    question3.tags.append(tag2)
+    question4.tags = [];
+
     lecture1.tags.append(tag1)
     lecture1.tags.append(tag2)
 
     # Add question and tags to session.
     db.session.add(question1)
+    db.session.add(question2)
+    db.session.add(question3)
+    db.session.add(question4)
     db.session.add(tag1)
     db.session.add(tag2)
     db.session.add(tag3)
@@ -130,6 +166,11 @@ def dbPopulateDummyValues(db):
     round1.responses.append(response1)
     round1.responses.append(response3)
 
+    # Add responses to session.
+    db.session.add(response1)
+    db.session.add(response3)
+    db.session.commit()
+
     class Result:   pass
     res = Result()
 
@@ -139,8 +180,14 @@ def dbPopulateDummyValues(db):
     res.__dict__["user4"] = user4
     res.__dict__["course1"] = course1
     res.__dict__["course2"] = course2
+    res.__dict__["course3"] = course3
     res.__dict__["lecture1"] = lecture1
+    res.__dict__["lecture2"] = lecture2
+    res.__dict__["lecture3"] = lecture3
     res.__dict__["question1"] = question1
+    res.__dict__["question2"] = question2
+    res.__dict__["question3"] = question3
+    res.__dict__["question4"] = question4
     res.__dict__["choice1"] = choice1
     res.__dict__["choice2"] = choice2
     res.__dict__["choice3"] = choice3
@@ -148,11 +195,6 @@ def dbPopulateDummyValues(db):
     res.__dict__["round1"] = round1
     res.__dict__["response1"] = response1
     res.__dict__["response3"] = response3
-
-    # Add responses to session.
-    db.session.add(response1)
-    db.session.add(response3)
-    db.session.commit()
 
     return res 
 

@@ -34,6 +34,10 @@ class Tag(db.Model):
   lectures = db.relationship('Lecture', secondary=lectureTags,
     backref='tags')
 
+  def __iter__(self):
+    yield ('tagId', self.tagId)
+    yield ('tagText', self.tagText)
+
 class User(db.Model):
   '''
   Describes a user in the system. A user may either be a teacher or a student in
