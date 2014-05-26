@@ -1,14 +1,15 @@
 #! /usr/bin/env python
 from flask import Flask, jsonify, make_response
-from flask.ext.restful import Api, Resource, reqparse
+from flask.ext.restful import Api, Resource, reqparse, abort
 from flask.ext.sqlalchemy import SQLAlchemy
 import uuid
 import config
-from Model import db, User, Course, Lecture
+from Model import db, User, Course, Lecture, Question, Choice, Tag
 from __init__ import app
 import datetime
 import time
 from copy import copy
+from common import nonempty
 
 api = Api(app)
 
@@ -247,25 +248,33 @@ class QuestionsApi(Resource):
     lectureId = getArg(args, "lectureId")
     title = getArg(args, "title")
     body = getArg(args, "body")
-    choices = getArg(args, "choices")
-    correctChoices = getArg(args, "correct-choices")
+    choices = nonempty(getArg(args, "choices"))
+    correctChoices = nonempty(getArg(args, "correct-choices"))
     tags = getArg(args, "tag")
 
     # Check that the answer choices are valid.
     if choices is None or len(choices) == 0:
-      return None
+      return abort(400, message="Invalid choices")
     if correctChoices is None or len(correctChoices) == 0:
-      return None
+      return abort(400, message="Invalid correct choices")
     choices = set(choices)
     correctChoices = set(correctChoices)
     if not correctChoices <= choices:
-      return None
+      return abort(400, message="Correct choices not a subset of all choices")
 
     # First check that lecture ID is valid.
     course = Course.query.get(courseId)
+    if course == None:
+      return abort(400, message="Unknown course id %s" % courseId)
+
     lecture = Lecture.query.get(lectureId)
-    if lecture is None or lecture.course != course:
-      return None
+
+    if lecture is None:
+      return abort(400, message="Unknown lecture id %s" % lectureId)
+
+    if lecture.course != course:
+      return abort(400, message="Lecture id %s is for a different course" % \
+        lectureId)
 
     # Create a question.
     question = Question(questionId=str(uuid.uuid4()), lecture=lecture,
@@ -276,10 +285,15 @@ class QuestionsApi(Resource):
     if tags is not None:
       for tagText in tags:
         # Find or create.
-        tag = Tag.query.all().filter(Tag.tagText == tagText)
-        if tag is None:
-          tag = Tag(tagId=str(uuid.uuid4()), tagText=tag)
+        tags = list(Tag.query.filter(Tag.tagText == tagText))
+        tag = None
+
+        if len(tags) == 0:
+          tag = Tag(tagId=str(uuid.uuid4()), tagText=tagText)
           db.session.add(tag)
+        else:
+          tag = tags[0]
+
         question.tags.append(tag)
 
     # Answer choices.
@@ -290,11 +304,14 @@ class QuestionsApi(Resource):
         choiceValid = 0
       choiceObj = Choice(choiceId=str(uuid.uuid4()), question=question,
         choiceStr=choice, choiceValid=choiceValid)
-      db.session.add(choice)
+      db.session.add(choiceObj)
 
     # Alright, commit to db.
     db.session.commit()
-    return myJson(question)
+    return myJson3(question, ('questionId', 'lectureId', 'title', \
+      'questionBody', \
+      ('choices', [('choiceId', 'choiceValid', 'choiceStr')]), 
+      ('correctChoices', [('choiceId', 'choiceValid', 'choiceStr')]), ))
 
 api.add_resource(QuestionsApi, '/courses/<string:courseId>/questions')
 
