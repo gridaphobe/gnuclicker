@@ -420,10 +420,18 @@ class ResponseRoundsApi(Resource):
     args = self.reqparse.parse_args()
     studentId = getArg(args, "studentId")
 
+    if (not course):
+      return error("Unknown course id %s" % courseId)
+
+    if (not question):
+      return error("Unknown question id %s" % questionId)
+
     # Verify that the question's lecture is associated with the course.
     if (question.lecture.course != course):
-      return None
+      return error("Question id %s is for a different course" % questionId)
+
     responses = []
+
     if studentId is None:
       # Get all responses for this question for all rounds.
       for answerRound in question.rounds:
@@ -432,7 +440,9 @@ class ResponseRoundsApi(Resource):
       for answerRound in question.rounds:
         responses.extend([response for response in answerRound.responses
           if response.studentId == studentId])
-    return myJson(responses)
+
+    return myJson3(responses, \
+      [('responseId', 'roundId', 'studentId', 'choiceId')])
 
 api.add_resource(ResponseRoundsApi,
   '/courses/<string:courseId>/questions/<string:questionId>/responses',

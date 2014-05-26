@@ -110,6 +110,20 @@ class TestCase(unittest.TestCase):
               res['message'], '\n'
             assert(False)
 
+    def assertFailGet(self, url, code, msg = None):
+        rv = self.app.get(url)
+        if (rv.status_code != code):
+          print "Expected status code %d but instead got %d\n" % \
+            (code, rv.status_code)
+          assert(False)
+
+        if (msg):
+          res = json.loads(rv.data)
+          if (res != { 'message': msg }):
+            print "Expected error message \n", msg, "\n but got: \n", \
+              res['message'], '\n'
+            assert(False)
+
     def setUp(self):
         app.config['TESTING'] = True
         app.config['CSRF_ENABLED'] = False
@@ -404,6 +418,40 @@ class TestCase(unittest.TestCase):
         # tags?
 
         # Edit a previously existing question
+
+    def test_ResponseRoundsApi(self):
+        vals = dbPopulateDummyValues(db)
+
+        # Bad courseId or questionId
+        self.assertError('/courses/BADVAL/questions/BADID/responses', \
+          'Unknown course id BADVAL')
+
+        self.assertError('/courses/' + vals.course2.courseId + \
+          '/questions/BADID/responses', 'Unknown question id BADID')
+
+        self.assertError('/courses/' + vals.course2.courseId + \
+          '/questions/' + vals.question4.questionId + '/responses', \
+          'Question id %s is for a different course' % \
+          vals.question4.questionId)
+
+        # Question with no rounds
+        self.assertJSON('/courses/' + vals.course3.courseId + \
+          '/questions/' + vals.question4.questionId + '/responses', [])
+
+        def r(resp):
+          return {'roundId': resp.roundId, 'choiceId': resp.choiceId,\
+                  'studentId': resp.studentId, 'responseId': resp.responseId}
+        
+        # All responses for a given question
+        self.assertJSON('/courses/' + vals.course2.courseId + \
+          '/questions/' + vals.question1.questionId + '/responses', \
+          [ r(vals.response1), r(vals.response3) ])
+
+        # All responses for a given question for a given student id
+        self.assertJSON('/courses/' + vals.course2.courseId + \
+          '/questions/' + vals.question1.questionId + '/responses?studentId=' +\
+          vals.user1.userId, [ r(vals.response1) ])
+
         
 
 if __name__ == '__main__':
