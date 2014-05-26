@@ -254,26 +254,26 @@ class QuestionsApi(Resource):
 
     # Check that the answer choices are valid.
     if choices is None or len(choices) == 0:
-      return abort(400, message="Invalid choices")
+      abort(400, message="Invalid choices")
     if correctChoices is None or len(correctChoices) == 0:
-      return abort(400, message="Invalid correct choices")
+      abort(400, message="Invalid correct choices")
     choices = set(choices)
     correctChoices = set(correctChoices)
     if not correctChoices <= choices:
-      return abort(400, message="Correct choices not a subset of all choices")
+      abort(400, message="Correct choices not a subset of all choices")
 
     # First check that lecture ID is valid.
     course = Course.query.get(courseId)
     if course == None:
-      return abort(400, message="Unknown course id %s" % courseId)
+      abort(400, message="Unknown course id %s" % courseId)
 
     lecture = Lecture.query.get(lectureId)
 
     if lecture is None:
-      return abort(400, message="Unknown lecture id %s" % lectureId)
+      abort(400, message="Unknown lecture id %s" % lectureId)
 
     if lecture.course != course:
-      return abort(400, message="Lecture id %s is for a different course" % \
+      abort(400, message="Lecture id %s is for a different course" % \
         lectureId)
 
     # Create a question.
@@ -332,33 +332,41 @@ class EditQuestionApi(Resource):
     '''
     Update the specified question with the specified parameters.
     '''
-    courseId = Course.query.get(courseId)
+    course = Course.query.get(courseId)
+
+    if (not course):
+      abort(400, message = "Unknown course %s" % courseId)
+
     question = Question.query.get(questionId)
+    if (not question):
+      abort(400, message = "Unknown question id %s" % questionId)
     # Check that the question belongs to the course.
     if question.lecture.course != course:
-      return None
+      abort(400, message=  "Question id %s corresponds to a different course" %\
+        questionId)
 
     # Parse arguments.
     args = self.reqparse.parse_args()
     lectureId = getArg(args, "lectureId")
     title = getArg(args, "title")
     body = getArg(args, "body")
-    choices = getArg(args, "choices")
-    correctChoices = getArg(args, "correct-choices")
+    choices = nonempty(getArg(args, "choices"))
+    correctChoices = nonempty(getArg(args, "correct-choices"))
     tags = getArg(args, "tag")
+
 
     # Check that the answer choices are valid.
     if choices is None or len(choices) == 0:
-      return None
+      abort(400, message = "Missing choices")
     if correctChoices is None or len(correctChoices) == 0:
-      return None
+      abort(400, message = "Missing correct choices")
     choices = set(choices)
     correctChoices = set(correctChoices)
     if not correctChoices <= choices:
-      return None
+      abort(400, message = "Correct choices not a subset of all choices")
 
     # Check lecture.
-    if lectureId != question.lectureId:
+    if (lectureId and lectureId != question.lectureId):
       # Remove the question from current lecture and move it to new lecture.
       currLecture = question.lecture
       newLecture = Lecture.query.get(lectureId)
@@ -383,11 +391,15 @@ class EditQuestionApi(Resource):
         choiceValid = 0
       choiceObj = Choice(choiceId=str(uuid.uuid4()), question=question,
         choiceStr=choice, choiceValid=choiceValid)
-      db.session.add(choice)
+      db.session.add(choiceObj)
 
     # Alright, commit.
     db.session.commit()
-    return myJson(question)
+    return myJson3(question, ('questionId', 'lectureId', 'title', \
+      'questionBody', \
+      ('choices', [('choiceId', 'choiceValid', 'choiceStr')]), 
+      ('correctChoices', [('choiceId', 'choiceValid', 'choiceStr')]), ))
+
 
 api.add_resource(EditQuestionApi,
   '/courses/<string:courseId>/questions/<string:questionId>',
