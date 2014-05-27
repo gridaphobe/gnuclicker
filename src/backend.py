@@ -18,17 +18,6 @@ api = Api(app)
 def getArg(args, name):
   return args.get(name, None)
 
-def objectify2(o, t):
-  if (isinstance(t, dict)):
-    res = {}
-    for k in t.keys():
-        res[k] = objectify2(getattr(o, k), t[k])
-    return res
-  elif (isinstance(t, list)):
-    return map(lambda x: objectify2(x, t[0]), o)
-  else:
-    return o
-
 def objectify3(o, t):
   if (isinstance(t, tuple)):
     res = {}
@@ -48,9 +37,6 @@ def objectify3(o, t):
 # { res: ... } object
 def myJson(o): 
     return jsonify(res = objectify(o))
-
-def myJson3(o, t): 
-    return jsonify(res = objectify2(o, t))
 
 def myJson3(o, t): 
     return jsonify(res = objectify3(o, t))
@@ -510,23 +496,32 @@ class RoundStartApi(Resource):
     '''
     course = Course.query.get(courseId)
     question = Question.query.get(questionId)
+
+    if (not course):
+      return error(EBADCOURSEID, courseId)
+
+    if (not question):
+      return error(EBADQUESTIONID, questionId)
+
     # Check that the question belongs to the course.
     if question.lecture.course != course:
-      return None
+      return error(EQUESTIONMISMATCH, questionId, courseId)
 
     # Check if there's already an active round.
-    if question.activeRound != "":
-      return None
+    if question.activeRound != "" and question.activeRound != None:
+      return error(EQUESTIONACTIVE, questionId)
 
     # Alright, create a round starting *now*, ending unspecified, add it to the
     # table of rounds, and set it as the active round for the question.
+    # TODO(dimo): Should the end time really be unspecified here?
     now = int(time.time())
-    answerRound = Round(roundId=str(uuid.uuid4()), question=question,
+    answerRound = Round(roundId=str(uuid.uuid4()), questionId=questionId,
       startTime=now, endTime=-1)
     question.activeRound = answerRound.roundId
     db.session.add(answerRound)
     # Done, return round.
-    return myJson(answerRound)
+    return myJson3(answerRound, ('roundId', 'questionId', 'startTime', \
+      'endTime', ('responses', [('responseId', 'roundId', 'studentId', 'choiceId')])))
 
 api.add_resource(RoundStartApi,
   '/courses/<string:courseId>/question/<string:questionId>/start',

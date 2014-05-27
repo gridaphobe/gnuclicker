@@ -497,6 +497,33 @@ class TestCase(unittest.TestCase):
 
     def test_RoundStartApi(self):
         vals = dbPopulateDummyValues(db)
+        # Bad courseId or questionId
+        self.assertErrorPost(\
+          '/courses/BADVAL/question/BADID/start', EBADCOURSEID,
+          'BADVAL')
+
+        self.assertErrorPost('/courses/' + vals.course2.courseId + \
+          '/question/BADID/start', EBADQUESTIONID, 'BADID')
+
+        self.assertErrorPost('/courses/' + vals.course2.courseId + \
+          '/question/' + vals.question4.questionId + '/start', \
+          EQUESTIONMISMATCH, vals.question4.questionId, vals.course2.courseId)
+
+        self.assertErrorPost('/courses/' + vals.course2.courseId + \
+          '/question/' + vals.question4.questionId + '/start', \
+          EQUESTIONMISMATCH, vals.question4.questionId, vals.course2.courseId)
+
+        # Question already has active round
+        self.assertErrorPost('/courses/' + vals.course3.courseId + \
+          '/question/' + vals.question5.questionId + '/start', \
+          EQUESTIONACTIVE, vals.question5.questionId)
+
+        # Valid start round
+        r = self.postJSON('/courses/' + vals.course3.courseId + \
+          '/question/' + vals.question4.questionId + '/start')
+
+        assert r['questionId'] == vals.question4.questionId
+        assert r['responses'] == []
 
     def test_RoundEndApi(self):
         vals = dbPopulateDummyValues(db)
