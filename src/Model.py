@@ -34,6 +34,10 @@ class Tag(db.Model):
   lectures = db.relationship('Lecture', secondary=lectureTags,
     backref='tags')
 
+  def __iter__(self):
+    yield ('tagId', self.tagId)
+    yield ('tagText', self.tagText)
+
 class User(db.Model):
   '''
   Describes a user in the system. A user may either be a teacher or a student in
@@ -129,6 +133,15 @@ class Question(db.Model):
   questionBody = db.Column(db.String)
   choices = db.relationship('Choice', backref='question')
   rounds = db.relationship('Round', backref='question')
+  activeRound = db.Column(db.String)
+
+  # TODO(dimo): UGH, ugly hack to support correctChoices field given the
+  # objectify model for extracting return data from db objects
+  def __getattr__(self, name):
+    if (name == 'correctChoices'):
+      return [choice for choice in self.choices if choice.choiceValid != 0]
+    else:
+      return super(Question, self).__getattr__(self, name)
 
   def __iter__(self):
     yield ('questionId', self.questionId)
