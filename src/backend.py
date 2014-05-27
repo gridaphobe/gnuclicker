@@ -575,8 +575,8 @@ api.add_resource(RoundEndApi,
 class LecturesApi(Resource):
   def __init__(self):
     self.postReqparse = reqparse.RequestParser()
-    self.postReqparse.add_argument('title', type=str)
-    self.postReqparse.add_argument('date', type=int)
+    self.postReqparse.add_argument('title', type=str, required=True)
+    self.postReqparse.add_argument('date', type=int, required=True)
     super(LecturesApi, self).__init__()
 
   def get(self, courseId):
@@ -584,7 +584,8 @@ class LecturesApi(Resource):
     Get all lectures for course.
     '''
     course = Course.query.get(courseId)
-    return myJson(course.lectures)
+    return myJson3(course.lectures, [('lectureId', 'courseId', 'lectureTitle', \
+      'date')])
 
   def post(self, courseId):
     '''
@@ -594,11 +595,16 @@ class LecturesApi(Resource):
     title = getArg(args, "title")
     date = datetime.datetime.fromtimestamp(int(getArg(args, "date")))
     course = Course.query.get(courseId)
+
+    if (not course):
+      return error(EBADCOURSEID, courseId)
+
     lecture = Lecture(lectureId=str(uuid.uuid4()), course=course,
       lectureTitle=title, date=date)
+
     db.session.add(lecture)
     db.session.commit()
-    return myJson(lecture)
+    return myJson3(lecture,('lectureId', 'courseId', 'lectureTitle', 'date'))
 
 api.add_resource(LecturesApi, '/courses/<string:courseId>/lectures',
   endpoint='lectures')
