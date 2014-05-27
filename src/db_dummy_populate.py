@@ -54,6 +54,8 @@ def dbPopulateDummyValues(db):
     user1.enrolledIn.append(course2)
     user2.enrolledIn.append(course1)
 
+    user1.enrolledIn.append(course3)
+
     # Add a lecture to user2's class.
     lecture1Id = uuid.uuid4()
     lecture2Id = uuid.uuid4()
@@ -76,6 +78,7 @@ def dbPopulateDummyValues(db):
     q2Id = uuid.uuid4()
     q3Id = uuid.uuid4()
     q4Id = uuid.uuid4()
+    q5Id = uuid.uuid4()
 
     question1 = Question(questionId=str(q1Id), lecture=lecture1,
       title="Bro, do you even aerodynamic lift?",
@@ -89,6 +92,9 @@ def dbPopulateDummyValues(db):
     question4 = Question(questionId=str(q4Id), lecture=lecture2,
       title="How much wood does a woodchuck have to chuck to.. ooh SQUIRREL!",
       questionBody="An ADHD Squirrel.")
+    question5 = Question(questionId=str(q5Id), lecture=lecture2,
+      title="Do I have an active round?",
+      questionBody="Do I?")
 
     # Create tags
     tag1Id = uuid.uuid4()
@@ -115,6 +121,7 @@ def dbPopulateDummyValues(db):
     db.session.add(question2)
     db.session.add(question3)
     db.session.add(question4)
+    db.session.add(question5)
     db.session.add(tag1)
     db.session.add(tag2)
     db.session.add(tag3)
@@ -125,6 +132,7 @@ def dbPopulateDummyValues(db):
     choice3Id = uuid.uuid4()
     choice4Id = uuid.uuid4()
     choice5Id = uuid.uuid4()
+    choice6Id = uuid.uuid4()
 
     choice1 = Choice(choiceId=str(choice1Id), question=question1,
       choiceStr="European", choiceValid=0)
@@ -136,6 +144,8 @@ def dbPopulateDummyValues(db):
       choiceStr="5 mph", choiceValid=1)
     choice5 = Choice(choiceId=str(choice5Id), question=question2,
       choiceStr="NO CHOICE", choiceValid=1)
+    choice6 = Choice(choiceId=str(choice6Id), question=question5,
+      choiceStr="CHOICE IS AN ILLUSION", choiceValid=1)
 
     # Add answers to session.
     db.session.add(choice1)
@@ -143,6 +153,7 @@ def dbPopulateDummyValues(db):
     db.session.add(choice3)
     db.session.add(choice4)
     db.session.add(choice5)
+    db.session.add(choice6)
 
     # Add answers to possible answers set.
     question1.choices.append(choice1)
@@ -151,15 +162,25 @@ def dbPopulateDummyValues(db):
     question1.choices.append(choice4)
 
     question2.choices.append(choice5)
+    question5.choices.append(choice6)
 
     # Add one round of answers to the first question.
     round1Id = uuid.uuid4()
+    round2Id = uuid.uuid4()
+
     round1 = Round(roundId=str(round1Id), question=question1, startTime=0,
       endTime=10)
     question1.rounds.append(round1)
 
+    round2 = Round(roundId=str(round2Id), question=question5, startTime=0,
+      endTime=10)
+    question5.rounds.append(round2)
+    question5.activeRound = round2.roundId
+    question5.tags = []
+
     # Add round to session.
     db.session.add(round1)
+    db.session.add(round2)
 
     # Add user1's and user3's responses.
     response1Id = uuid.uuid4()
@@ -194,12 +215,15 @@ def dbPopulateDummyValues(db):
     res.__dict__["question2"] = question2
     res.__dict__["question3"] = question3
     res.__dict__["question4"] = question4
+    res.__dict__["question5"] = question5
     res.__dict__["choice1"] = choice1
     res.__dict__["choice2"] = choice2
     res.__dict__["choice3"] = choice3
     res.__dict__["choice4"] = choice4
     res.__dict__["choice5"] = choice5
+    res.__dict__["choice6"] = choice6
     res.__dict__["round1"] = round1
+    res.__dict__["round2"] = round2
     res.__dict__["response1"] = response1
     res.__dict__["response3"] = response3
 

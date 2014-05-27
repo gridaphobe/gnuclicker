@@ -471,7 +471,7 @@ class ResponseApi(Resource):
       return error(EQUESTIONMISMATCH, questionId, courseId)
 
     # Check if there's  an active round.
-    if question.activeRound == "":
+    if question.activeRound == None or question.activeRound == "":
       return error(ENOACTIVEROUND, questionId) 
 
     choice = Choice.query.get(choiceId)
@@ -481,7 +481,7 @@ class ResponseApi(Resource):
     # Make sure choice corresponds to question.
     if choice.question != question:
       return error(ECHOICEMISMATCH, choiceId, questionId)
-      
+
     # TODO: Once user logins/identities are implemented, we'll pull the student
     # ID from the session. For now, we hardcode it as being the answer
     # for...some random student in the class.
@@ -492,11 +492,12 @@ class ResponseApi(Resource):
     response = Response(
       responseId=str(uuid.uuid4()),
       roundFor=Round.query.get(question.activeRound),
-      studentId=studentId,
+      studentId=student.userId,
       choiceId=choice.choiceId)
     db.session.add(response)
     db.session.commit()
-    return myJson(response)
+
+    return myJson3(response, ('responseId', 'roundId', 'studentId', 'choiceId'))
 
 api.add_resource(ResponseApi,
   '/courses/<string:courseId>/question/<string:questionId>/respond',

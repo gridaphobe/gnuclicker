@@ -227,11 +227,13 @@ class TestCase(unittest.TestCase):
                 'questionBody': m.questionBody, 'lectureId': m.lectureId }
 
         self.assertJSON("/courses/" + vals.course3.courseId + "/questions", \
-            [q(vals.question2), q(vals.question3), q(vals.question4) ])
+            [ q(vals.question2), q(vals.question3), q(vals.question4),\
+              q(vals.question5) ])
 
         self.assertJSON("/courses/" + vals.course3.courseId + \
             "/questions?lectureId=" + vals.lecture2.lectureId, \
-            [q(vals.question2), q(vals.question3), q(vals.question4) ])
+            [ q(vals.question2), q(vals.question3), q(vals.question4), \
+              q(vals.question5) ])
 
         self.assertJSON("/courses/" + vals.course3.courseId + \
             "/questions?lectureId=" + vals.lecture3.lectureId, \
@@ -462,27 +464,36 @@ class TestCase(unittest.TestCase):
           'choiceId')
 
         # Bad choiceId
-        self.assertErrorPost('/courses/' + vals.course2.courseId + \
-          '/question/' + vals.question1.questionId + '/respond?choiceId=', \
+        self.assertErrorPost('/courses/' + vals.course3.courseId + \
+          '/question/' + vals.question5.questionId + '/respond?choiceId=', \
           EBADCHOICEID, '')
 
-        self.assertErrorPost('/courses/' + vals.course2.courseId + \
-          '/question/' + vals.question1.questionId + '/respond?choiceId=BOO',
+        self.assertErrorPost('/courses/' + vals.course3.courseId + \
+          '/question/' + vals.question5.questionId + '/respond?choiceId=BOO',
           EBADCHOICEID, 'BOO')
 
-        self.assertErrorPost('/courses/' + vals.course2.courseId + \
-          '/question/' + vals.question1.questionId + '/respond?choiceId=' + \
+        self.assertErrorPost('/courses/' + vals.course3.courseId + \
+          '/question/' + vals.question5.questionId + '/respond?choiceId=' + \
           vals.choice5.choiceId, ECHOICEMISMATCH, vals.choice5.choiceId,
-          vals.question1.questionId)
+          vals.question5.questionId)
 
         # No active round
-        """
         self.assertErrorPost('/courses/' + vals.course2.courseId + \
           '/question/' + vals.question1.questionId + '/respond?choiceId=' + \
-           vals.choice1.choiceId, 
-          'No active round for question %s' % \
-          vals.question4.questionId)
-        """
+           vals.choice1.choiceId, ENOACTIVEROUND, vals.question1.questionId)
+
+        # Response with invalid choice
+        resp = self.postJSON('/courses/' + vals.course3.courseId + \
+          '/question/' + vals.question5.questionId + '/respond?choiceId=' + \
+           vals.choice6.choiceId)
+
+        self.assertJSON('/courses/' + vals.course3.courseId + \
+          '/questions/' + vals.question5.questionId + '/responses', 
+          [ resp ])
+
+        self.assertJSON('/courses/' + vals.course3.courseId + \
+          '/questions/' + vals.question5.questionId + \
+          '/responses?studentId=' + resp['studentId'],  [ resp ])
 
     def test_RoundStartApi(self):
         vals = dbPopulateDummyValues(db)
