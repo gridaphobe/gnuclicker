@@ -124,6 +124,7 @@ def dbPopulateDummyValues(db):
     choice2Id = uuid.uuid4()
     choice3Id = uuid.uuid4()
     choice4Id = uuid.uuid4()
+    choice5Id = uuid.uuid4()
 
     choice1 = Choice(choiceId=str(choice1Id), question=question1,
       choiceStr="European", choiceValid=0)
@@ -133,18 +134,23 @@ def dbPopulateDummyValues(db):
       choiceStr="AAAAARGGGHHHH", choiceValid=1)
     choice4 = Choice(choiceId=str(choice4Id), question=question1,
       choiceStr="5 mph", choiceValid=1)
+    choice5 = Choice(choiceId=str(choice5Id), question=question2,
+      choiceStr="NO CHOICE", choiceValid=1)
 
     # Add answers to session.
     db.session.add(choice1)
     db.session.add(choice2)
     db.session.add(choice3)
     db.session.add(choice4)
+    db.session.add(choice5)
 
     # Add answers to possible answers set.
     question1.choices.append(choice1)
     question1.choices.append(choice2)
     question1.choices.append(choice3)
     question1.choices.append(choice4)
+
+    question2.choices.append(choice5)
 
     # Add one round of answers to the first question.
     round1Id = uuid.uuid4()
@@ -192,6 +198,7 @@ def dbPopulateDummyValues(db):
     res.__dict__["choice2"] = choice2
     res.__dict__["choice3"] = choice3
     res.__dict__["choice4"] = choice4
+    res.__dict__["choice5"] = choice5
     res.__dict__["round1"] = round1
     res.__dict__["response1"] = response1
     res.__dict__["response3"] = response3

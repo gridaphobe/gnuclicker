@@ -14,6 +14,7 @@ from Model import db, User
 from db_dummy_populate import * 
 from json import dumps
 from flask import jsonify
+from error import *
 
 def jsonifyTime(t):     return t.strftime("%a, %d %b %Y %H:%M:%S GMT")
 
@@ -42,87 +43,76 @@ def equalModuloOrder(obj, template):
         return template == obj 
 
 class TestCase(unittest.TestCase):
+    def _assertSuccess(self, rv):
+        self._assertCode(rv, 200)
+        ret = json.loads(rv.data)
 
+        if ('res' not in ret):
+            print 'Expected json return, instead got: ', ret
+            assert False
+
+        return ret['res']
+
+    def _assertCode(self, rv, code):
+        if (rv.status_code != code):
+          print "Expected HTTP response %d instead got response %d: %s" % \
+            (code, rv.status_code, rv.data)
+        assert rv.status_code == code 
+
+    def _assertCodeAndError(self, rv, code, msg = None):
+        self._assertCode(rv, code)
+        if (msg != None):
+          res = json.loads(rv.data)
+          if (code == 200):
+            if ('error' not in res):
+              print "Missing error field in return"
+            if (res['error'] != msg):
+              print "Wrong error message: expected ", msg, " got ", \
+                res['error']
+            assert res == { u'error' : msg }
+          else:
+            if ('message' not in res):
+              print "Missing message field in return"
+            if (res['message'] != msg):
+              print "Wrong error message: expected ", msg, " got ", \
+                res['message']
+            assert res == { u'message' : msg }
+
+    def _assertError(self, rv, err, *args):
+        self._assertCode(rv, errretcode(err))
+        ret = json.loads(rv.data)
+
+        if (not iserrobj(ret, err, *args)):
+          print "\nExpected error:", errobj(err, *args), "but got", ret
+          assert False
+
+# Raw getters
     def getJSON(self, url):
-        rv = self.app.get(url)
-        assert rv.status_code == 200
-        return json.loads(rv.data)
+        return self._assertSuccess(self.app.get(url))
 
+    def putJSON(self, url):
+        return self._assertSuccess(self.app.put(url))
+
+    def postJSON(self, url):
+        return self._assertSuccess(self.app.post(url))
+
+# Assert success
     def assertJSON(self, url, obj):
         json = self.getJSON(url)
-        if ('res' not in json):
-            print 'Expected json return, instead got: ', json
-            assert False
-        if (not equalModuloOrder(json, { u'res' : obj })):
-            print "Error: Mismatch between expected: \n", { u'res' : obj },\
+        if (not equalModuloOrder(json, obj)):
+            print "Error: Mismatch between expected: \n", obj,\
                 "\n and actual: \n", json
 
             assert False
 
-    def post(self, url):
-        rv = self.app.post(url)
-        assert rv.status_code == 200
-        return json.loads(rv.data)['res']
+    def assertErrorGet(self, url, err, *args):
+        self._assertError(self.app.get(url), err, *args)
 
-    def put(self, url):
-        rv = self.app.put(url)
-        assert rv.status_code == 200
-        return json.loads(rv.data)['res']
+    def assertErrorPut(self, url, err, *args):
+        self._assertError(self.app.put(url), err, *args)
 
-    def assertError(self, url, msg):
-        json = self.getJSON(url)
-
-        if ('res' in json):
-            print "Expected error message: \n", msg, \
-                "\n but instead got result: \n", res
-
-        if ('error' not in json):
-            print "Error is not set!"
-
-        if (json['error'] != msg):
-            print "Wrong error message expected: ", msg, " got: ", json['error']
-
-        assert json == { u'error' : msg }
-
-    def assertFailPost(self, url, code, msg = None):
-        rv = self.app.post(url)
-        if (rv.status_code != code):
-          print "Expected status code %d but instead got %d\n" % \
-            (code, rv.status_code)
-          assert(False)
-        res = json.loads(rv.data)
-        if (msg and res != { 'message': msg }):
-          print "Expected error message \n", msg, "\n but got: \n", \
-            res['message'], '\n'
-          assert(False)
-
-    def assertFailPut(self, url, code, msg = None):
-        rv = self.app.put(url)
-        if (rv.status_code != code):
-          print "Expected status code %d but instead got %d\n" % \
-            (code, rv.status_code)
-          assert(False)
-
-        if (msg):
-          res = json.loads(rv.data)
-          if (res != { 'message': msg }):
-            print "Expected error message \n", msg, "\n but got: \n", \
-              res['message'], '\n'
-            assert(False)
-
-    def assertFailGet(self, url, code, msg = None):
-        rv = self.app.get(url)
-        if (rv.status_code != code):
-          print "Expected status code %d but instead got %d\n" % \
-            (code, rv.status_code)
-          assert(False)
-
-        if (msg):
-          res = json.loads(rv.data)
-          if (res != { 'message': msg }):
-            print "Expected error message \n", msg, "\n but got: \n", \
-              res['message'], '\n'
-            assert(False)
+    def assertErrorPost(self, url, err, *args):
+        self._assertError(self.app.post(url), err, *args)
 
     def setUp(self):
         app.config['TESTING'] = True
@@ -159,8 +149,8 @@ class TestCase(unittest.TestCase):
               u'instructorId': vals.course1.instructorId}])
 
         self.assertJSON("/courses?instructorId=" + vals.user3.userId, [])
-        self.assertError("/courses?instructorId=" + "BADVAL", \
-            "Unknown instructor id BADVAL")
+        self.assertErrorGet("/courses?instructorId=" + "BADVAL", \
+            EBADINSTRUCTORID, "BADVAL")
 
         # All Courses for a given student 
         self.assertJSON("/courses?studentId=" + vals.user2.userId, 
@@ -169,8 +159,8 @@ class TestCase(unittest.TestCase):
               u'instructorId': vals.course1.instructorId}])
 
         self.assertJSON("/courses?studentId=" + vals.user4.userId, [])
-        self.assertError("/courses?studentId=" + "BADVAL", \
-            "Unknown student id BADVAL")
+        self.assertErrorGet("/courses?studentId=" + "BADVAL", \
+            EBADSTUDENTID, "BADVAL")
 
     def test_LecturesListApi(self):
         vals = dbPopulateDummyValues(db)
@@ -181,7 +171,7 @@ class TestCase(unittest.TestCase):
               "lectureId": vals.lecture1.lectureId, \
               "lectureTitle" : vals.lecture1.lectureTitle
             }])
-        self.assertError("/courses/BADVAL/lectures", "Unknown course id BADVAL")
+        self.assertErrorGet("/courses/BADVAL/lectures", EBADCOURSEID, "BADVAL")
 
     def test_CourseStudentManifestApi(self):
         vals = dbPopulateDummyValues(db)
@@ -195,11 +185,14 @@ class TestCase(unittest.TestCase):
               'name': vals.course1.students[1].name,
             }])
 
-        self.assertError("/courses/BADVAL/students", "Unknown course id BADVAL")
+        self.assertErrorGet("/courses/BADVAL/students", EBADCOURSEID, "BADVAL")
 
-        self.assertError("/courses/" + vals.course1.courseId + \
-            "/students?lectureId=BADVAL", \
-            "Unknown lecture id BADVAL for course %s" % (vals.course1.courseId))
+        self.assertErrorGet("/courses/" + vals.course1.courseId + \
+            "/students?lectureId=BADVAL", EBADLECTUREID, "BADVAL")
+
+        self.assertErrorGet("/courses/" + vals.course1.courseId + \
+            "/students?lectureId=" + vals.lecture3.lectureId, ELECTUREMISMATCH,\
+            vals.lecture3.lectureId, vals.course1.courseId)
 
         self.assertJSON("/courses/" + vals.course2.courseId + \
             "/students?lectureId=" + vals.lecture1.lectureId, [\
@@ -221,12 +214,11 @@ class TestCase(unittest.TestCase):
                 'name': vals.user1.name,
             })
 
-        self.assertError("/users/BADVAL", "Unknown user id BADVAL")
+        self.assertErrorGet("/users/BADVAL", EBADUSERID, "BADVAL")
 
     def test_QuestionApi_get(self):
         vals = dbPopulateDummyValues(db)
-        self.assertError("/courses/BADVAL/questions",\
-            "Unknown course id BADVAL")
+        self.assertErrorGet("/courses/BADVAL/questions", EBADCOURSEID, "BADVAL")
 
         def q(m):
             return { 'questionId': m.questionId, 'title': m.title, \
@@ -245,13 +237,12 @@ class TestCase(unittest.TestCase):
             "/questions?lectureId=" + vals.lecture3.lectureId, \
             [])
 
-        self.assertError("/courses/" + vals.course3.courseId + \
-            "/questions?lectureId=BADVAL", \
-            "Unknown lecture id BADVAL")
+        self.assertErrorGet("/courses/" + vals.course3.courseId + \
+            "/questions?lectureId=BADVAL", EBADLECTUREID, "BADVAL")
 
-        self.assertError("/courses/" + vals.course3.courseId + \
+        self.assertErrorGet("/courses/" + vals.course3.courseId + \
             "/questions?lectureId=" + vals.lecture1.lectureId, \
-            "Lecture %s belongs to different course" % vals.lecture1.lectureId)
+            ELECTUREMISMATCH, vals.lecture1.lectureId, vals.course3.courseId)
 
         self.assertJSON("/courses/" + vals.course3.courseId + \
             "/questions?lectureId=" + vals.lecture2.lectureId + "&tag=BADTAG",\
@@ -281,53 +272,53 @@ class TestCase(unittest.TestCase):
         vals = dbPopulateDummyValues(db)
 
         # Missing Parameters
-        self.assertFailPost('/courses/BADVAL/questions', 400)
-        self.assertFailPost('/courses/BADVAL/questions?lectureId=A', 400)
-        self.assertFailPost('/courses/BADVAL/questions?lectureId=A'+ 
-            '&title=B', 400)
-        self.assertFailPost('/courses/BADVAL/questions?lectureId=A'+ 
-            '&title=B&body=C', 400)
-        self.assertFailPost('/courses/BADVAL/questions?lectureId=A'+ 
-            '&title=B&body=C&choices=D', 400)
+        self.assertErrorPost('/courses/BADVAL/questions', EMISSINGARG, \
+          'lectureId')
+        self.assertErrorPost('/courses/BADVAL/questions?lectureId=A', \
+          EMISSINGARG, 'title')
+        self.assertErrorPost('/courses/BADVAL/questions?lectureId=A'+ 
+            '&title=B', EMISSINGARG, 'body')
+        self.assertErrorPost('/courses/BADVAL/questions?lectureId=A'+ 
+            '&title=B&body=C', EMISSINGARG, 'choices')
+        self.assertErrorPost('/courses/BADVAL/questions?lectureId=A'+ 
+            '&title=B&body=C&choices=D', EMISSINGARG, 'correct-choices')
 
         # Non-existing course
-        self.assertFailPost('/courses/BADVAL/questions?lectureId=A'+
-          '&title=B&body=C&choices=D&correct-choices=D', 400, \
-          "Unknown course id BADVAL")
+        self.assertErrorPost('/courses/BADVAL/questions?lectureId=A'+
+          '&title=B&body=C&choices=D&correct-choices=D', EBADCOURSEID, "BADVAL")
 
         # Invalid choices/correct choices
-        self.assertFailPost('/courses/' + vals.course3.courseId + \
+        self.assertErrorPost('/courses/' + vals.course3.courseId + \
           '/questions?lectureId=A'+
-          '&title=B&body=C&choices=&correct-choices=D', 400, \
-          "Invalid choices")
+          '&title=B&body=C&choices=&correct-choices=D', EMISSINGARG, 'choices')
 
-        self.assertFailPost('/courses/' + vals.course3.courseId + \
+        self.assertErrorPost('/courses/' + vals.course3.courseId + \
           '/questions?lectureId=A'+
-          '&title=B&body=C&choices=D&correct-choices=', 400, \
-          "Invalid correct choices")
+          '&title=B&body=C&choices=D&correct-choices=', EMISSINGARG, \
+          'correct-choices')
 
-        self.assertFailPost('/courses/' + vals.course3.courseId + \
+        self.assertErrorPost('/courses/' + vals.course3.courseId + \
           '/questions?lectureId=A'+
-          '&title=B&body=C&choices=A&choices=B&correct-choices=D', 400, \
-          "Correct choices not a subset of all choices")
+          '&title=B&body=C&choices=A&choices=B&correct-choices=D', \
+          ECORRECTNONSUBSET, 'D', 'A,B')
 
         # Bad lecture Ids
-        self.assertFailPost('/courses/' + vals.course3.courseId + \
+        self.assertErrorPost('/courses/' + vals.course3.courseId + \
           '/questions?lectureId='+
-          '&title=B&body=C&choices=A&choices=B&correct-choices=B', 400, \
-          "Unknown lecture id ")
+          '&title=B&body=C&choices=A&choices=B&correct-choices=B', \
+           EBADLECTUREID, '')
 
-        self.assertFailPost('/courses/' + vals.course3.courseId + \
+        self.assertErrorPost('/courses/' + vals.course3.courseId + \
           '/questions?lectureId=BADVAL'+
-          '&title=B&body=C&choices=A&choices=B&correct-choices=B', 400, \
-          "Unknown lecture id BADVAL")
+          '&title=B&body=C&choices=A&choices=B&correct-choices=B', \
+           EBADLECTUREID, 'BADVAL')
 
-        self.assertFailPost('/courses/' + vals.course3.courseId + \
+        self.assertErrorPost('/courses/' + vals.course3.courseId + \
           '/questions?lectureId=' + vals.lecture1.lectureId +
-          '&title=B&body=C&choices=A&choices=B&correct-choices=B', 400, \
-          "Lecture id %s is for a different course" % vals.lecture1.lectureId)
+          '&title=B&body=C&choices=A&choices=B&correct-choices=B', \
+          ELECTUREMISMATCH, vals.lecture1.lectureId, vals.course3.courseId)
 
-        q1 = self.post('/courses/' + vals.course3.courseId + \
+        q1 = self.postJSON('/courses/' + vals.course3.courseId + \
           '/questions?lectureId=' + vals.lecture3.lectureId +
           '&title=B&body=C&choices=A&choices=B&correct-choices=B')
 
@@ -338,7 +329,7 @@ class TestCase(unittest.TestCase):
         self.assertJSON('/courses/' + vals.course3.courseId + \
           '/questions?lectureId=' + vals.lecture3.lectureId, [ q(q1) ])
 
-        q2 = self.post('/courses/' + vals.course3.courseId + \
+        q2 = self.postJSON('/courses/' + vals.course3.courseId + \
           '/questions?lectureId=' + vals.lecture3.lectureId + \
           '&title=B&body=C&choices=A&choices=B&correct-choices=B' + \
           '&tag=WOO&tag=HOO')
@@ -370,44 +361,44 @@ class TestCase(unittest.TestCase):
 
 
         # Bad courseId or questionId
-        self.assertFailPut('/courses/BADVAL/questions/BADID', 400, \
-          'Unknown course BADVAL')
-        self.assertFailPut('/courses/' + vals.course3.courseId + \
-          '/questions/BADID', 400, "Unknown question id BADID")
-        self.assertFailPut('/courses/' + vals.course3.courseId + \
-          '/questions/' + vals.question1.questionId, \
-          400, 'Question id %s corresponds to a different course' % \
-          vals.question1.questionId)
+        self.assertErrorPut('/courses/BADVAL/questions/BADID', EBADCOURSEID,
+          "BADVAL")
+        self.assertErrorPut('/courses/' + vals.course3.courseId + \
+          '/questions/BADID', EBADQUESTIONID, "BADID")
+        self.assertErrorPut('/courses/' + vals.course3.courseId + \
+          '/questions/' + vals.question1.questionId, EQUESTIONMISMATCH,
+          vals.question1.questionId, vals.course3.courseId)
 
         # Missing Arguments
-        self.assertFailPut('/courses/' + vals.course3.courseId + \
-          '/questions/' + vals.question3.questionId, 400, '')
+        self.assertErrorPut('/courses/' + vals.course3.courseId + \
+          '/questions/' + vals.question3.questionId, EMISSINGARG, 'title') 
 
-        self.assertFailPut('/courses/' + vals.course3.courseId + \
-          '/questions/' + vals.question3.questionId + '?title=Foo', 400, '')
+        self.assertErrorPut('/courses/' + vals.course3.courseId + \
+          '/questions/' + vals.question3.questionId + '?title=Foo', \
+          EMISSINGARG, 'body')
 
-        self.assertFailPut('/courses/' + vals.course3.courseId + \
+        self.assertErrorPut('/courses/' + vals.course3.courseId + \
           '/questions/' + vals.question3.questionId + '?title=Foo&body=Bar', \
-          400, '')
+          EMISSINGARG, 'choices')
 
-        self.assertFailPut('/courses/' + vals.course3.courseId + \
+        self.assertErrorPut('/courses/' + vals.course3.courseId + \
           '/questions/' + vals.question3.questionId + '?title=Foo&body=Bar' + \
-          '&choices=&correct-choices=', 400, 'Missing choices')
+          '&choices=&correct-choices=', EMISSINGARG, 'choices')
 
-        self.assertFailPut('/courses/' + vals.course3.courseId + \
+        self.assertErrorPut('/courses/' + vals.course3.courseId + \
           '/questions/' + vals.question3.questionId + '?title=Foo&body=Bar' + \
-          '&choices=A', 400, '')
+          '&choices=A', EMISSINGARG, 'correct-choices')
 
-        self.assertFailPut('/courses/' + vals.course3.courseId + \
+        self.assertErrorPut('/courses/' + vals.course3.courseId + \
           '/questions/' + vals.question3.questionId + '?title=Foo&body=Bar' + \
-          '&choices=A&correct-choices=', 400, 'Missing correct choices')
+          '&choices=A&correct-choices=', EMISSINGARG, 'correct-choices')
 
-        self.assertFailPut('/courses/' + vals.course3.courseId + \
+        self.assertErrorPut('/courses/' + vals.course3.courseId + \
           '/questions/' + vals.question3.questionId + '?title=Foo&body=Bar' + \
-          '&choices=A&correct-choices=D', 400, '')
+          '&choices=A&correct-choices=D', ECORRECTNONSUBSET, 'D', 'A') 
 
         # Create a question
-        q1 = self.put('/courses/' + vals.course2.courseId + \
+        q1 = self.putJSON('/courses/' + vals.course2.courseId + \
           '/questions/' + vals.question1.questionId + '?title=Foo&body=Bar' + \
           '&choices=A&correct-choices=A')
 
@@ -423,16 +414,15 @@ class TestCase(unittest.TestCase):
         vals = dbPopulateDummyValues(db)
 
         # Bad courseId or questionId
-        self.assertError('/courses/BADVAL/questions/BADID/responses', \
-          'Unknown course id BADVAL')
+        self.assertErrorGet('/courses/BADVAL/questions/BADID/responses',
+          EBADCOURSEID, 'BADVAL')
 
-        self.assertError('/courses/' + vals.course2.courseId + \
-          '/questions/BADID/responses', 'Unknown question id BADID')
+        self.assertErrorGet('/courses/' + vals.course2.courseId + \
+          '/questions/BADID/responses', EBADQUESTIONID, 'BADID')
 
-        self.assertError('/courses/' + vals.course2.courseId + \
+        self.assertErrorGet('/courses/' + vals.course2.courseId + \
           '/questions/' + vals.question4.questionId + '/responses', \
-          'Question id %s is for a different course' % \
-          vals.question4.questionId)
+          EQUESTIONMISMATCH, vals.question4.questionId, vals.course2.courseId)
 
         # Question with no rounds
         self.assertJSON('/courses/' + vals.course3.courseId + \
@@ -452,6 +442,59 @@ class TestCase(unittest.TestCase):
           '/questions/' + vals.question1.questionId + '/responses?studentId=' +\
           vals.user1.userId, [ r(vals.response1) ])
 
+    def test_ResponseApi(self):
+        vals = dbPopulateDummyValues(db)
+        # Bad courseId or questionId
+        self.assertErrorPost(\
+          '/courses/BADVAL/question/BADID/respond?choiceId=', EBADCOURSEID,
+          'BADVAL')
+
+        self.assertErrorPost('/courses/' + vals.course2.courseId + \
+          '/question/BADID/respond?choiceId=', EBADQUESTIONID, 'BADID')
+
+        self.assertErrorPost('/courses/' + vals.course2.courseId + \
+          '/question/' + vals.question4.questionId + '/respond?choiceId=', \
+          EQUESTIONMISMATCH, vals.question4.questionId, vals.course2.courseId)
+
+        # No choiceId
+        self.assertErrorPost('/courses/' + vals.course2.courseId + \
+          '/question/' + vals.question1.questionId + '/respond', EMISSINGARG,
+          'choiceId')
+
+        # Bad choiceId
+        self.assertErrorPost('/courses/' + vals.course2.courseId + \
+          '/question/' + vals.question1.questionId + '/respond?choiceId=', \
+          EBADCHOICEID, '')
+
+        self.assertErrorPost('/courses/' + vals.course2.courseId + \
+          '/question/' + vals.question1.questionId + '/respond?choiceId=BOO',
+          EBADCHOICEID, 'BOO')
+
+        self.assertErrorPost('/courses/' + vals.course2.courseId + \
+          '/question/' + vals.question1.questionId + '/respond?choiceId=' + \
+          vals.choice5.choiceId, ECHOICEMISMATCH, vals.choice5.choiceId,
+          vals.question1.questionId)
+
+        # No active round
+        """
+        self.assertErrorPost('/courses/' + vals.course2.courseId + \
+          '/question/' + vals.question1.questionId + '/respond?choiceId=' + \
+           vals.choice1.choiceId, 
+          'No active round for question %s' % \
+          vals.question4.questionId)
+        """
+
+    def test_RoundStartApi(self):
+        vals = dbPopulateDummyValues(db)
+
+    def test_RoundEndApi(self):
+        vals = dbPopulateDummyValues(db)
+
+    def test_LecturesApi(self):
+        vals = dbPopulateDummyValues(db)
+
+    def test_LecturesDetailsApi(self):
+        vals = dbPopulateDummyValues(db)
         
 
 if __name__ == '__main__':

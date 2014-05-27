@@ -1,15 +1,17 @@
 #! /usr/bin/env python
 from flask import Flask, jsonify, make_response
-from flask.ext.restful import Api, Resource, reqparse, abort
+from flask.ext.restful import Api, Resource, reqparse
 from flask.ext.sqlalchemy import SQLAlchemy
 import uuid
 import config
-from Model import db, User, Course, Lecture, Question, Choice, Tag
+from Model import db, User, Course, Lecture, Question, Choice, Tag, Response, \
+                  Round
 from __init__ import app
 import datetime
 import time
 from copy import copy
-from common import nonempty
+from common import *
+from error import *
 
 api = Api(app)
 
@@ -53,10 +55,6 @@ def myJson3(o, t):
 def myJson3(o, t): 
     return jsonify(res = objectify3(o, t))
 
-def error(msg):
-    return jsonify(error = msg)
-
-
 class CoursesListApi(Resource):
   def __init__(self):
     self.reqparse = reqparse.RequestParser()
@@ -75,12 +73,12 @@ class CoursesListApi(Resource):
     if (studentId):
       student = User.query.get(studentId)
       if (student == None):
-        return error("Unknown student id %s" % (studentId))
+        return error(EBADSTUDENTID, studentId)
 
     if (instructorId):
       instructor = User.query.get(instructorId)
       if (instructor == None):
-        return error("Unknown instructor id %s" % (instructorId))
+        return error(EBADINSTRUCTORID, instructorId)
         
     res = None
 
@@ -111,7 +109,8 @@ class LecturesListApi(Resource):
       return myJson3(course.lectures, [('courseId', 'lectureTitle', \
         'lectureId', 'date' )])
     else:
-      return error("Unknown course id %s" % courseId)
+      return error(EBADCOURSEID, courseId)
+
 
 api.add_resource(LecturesListApi, '/courses/<string:courseId>/lectures',
   endpoint='lectures_list')
@@ -133,7 +132,7 @@ class CourseStudentManifestApi(Resource):
     userDesc = [( 'userId' , 'universityId', 'name' )]
 
     if (course == None):
-      return error("Unknown course id %s" % courseId)
+      return error(EBADCOURSEID, courseId)
 
     if lectureId is None:
       # Return all students enrolled in class.
@@ -143,13 +142,11 @@ class CourseStudentManifestApi(Resource):
       lecture = Lecture.query.get(lectureId)
 
       if (not lecture):
-        return error("Unknown lecture id %s for course %s" % \
-          (lectureId, courseId))
+        return error(EBADLECTUREID, lectureId)
 
       if lecture.course != course:
         # Invalid lecture for this course.
-        return error("Invalid lecture with id %s in course %s" % \
-          (lectureId, courseId))
+        return error(ELECTUREMISMATCH, lectureId, courseId)
 
       students = set()
       for question in lecture.questions:
@@ -171,7 +168,7 @@ class UserApi(Resource):
     if (user):
       return myJson3(user, ( 'userId', 'universityId', 'name' ))
     else:
-      return error("Unknown user id %s" % userId)
+      return error(EBADUSERID, userId)
 
 api.add_resource(UserApi, '/users/<string:userId>', endpoint='user')
 
@@ -209,7 +206,7 @@ class QuestionsApi(Resource):
       'questionBody', ('tags', [('tagId', 'tagText')]))]
 
     if course == None:
-      return error("Unknown course id %s" % courseId)
+      return error(EBADCOURSEID, courseId)
 
     if lectureId is None:
       # Get all questions for course across all lectures.
@@ -226,9 +223,9 @@ class QuestionsApi(Resource):
     else:
       lecture = Lecture.query.get(lectureId)
       if (not lecture):
-        return error("Unknown lecture id %s" % lectureId)
+        return error(EBADLECTUREID, lectureId)
       if lecture.course != course:
-        return error("Lecture %s belongs to different course" % lectureId)
+        return error(ELECTUREMISMATCH, lectureId, courseId)
       if tags is None:
         return myJson3(lecture.questions, qDesc)
       else:
@@ -254,27 +251,26 @@ class QuestionsApi(Resource):
 
     # Check that the answer choices are valid.
     if choices is None or len(choices) == 0:
-      abort(400, message="Invalid choices")
+      return error(EMISSINGARG, "choices")
     if correctChoices is None or len(correctChoices) == 0:
-      abort(400, message="Invalid correct choices")
+      return error(EMISSINGARG, "correct-choices")
     choices = set(choices)
     correctChoices = set(correctChoices)
     if not correctChoices <= choices:
-      abort(400, message="Correct choices not a subset of all choices")
+      return error(ECORRECTNONSUBSET, ppset(correctChoices), ppset(choices))
 
     # First check that lecture ID is valid.
     course = Course.query.get(courseId)
     if course == None:
-      abort(400, message="Unknown course id %s" % courseId)
+      return error(EBADCOURSEID, courseId)
 
     lecture = Lecture.query.get(lectureId)
 
     if lecture is None:
-      abort(400, message="Unknown lecture id %s" % lectureId)
+      return error(EBADLECTUREID, lectureId)
 
     if lecture.course != course:
-      abort(400, message="Lecture id %s is for a different course" % \
-        lectureId)
+      return error(ELECTUREMISMATCH, lectureId, courseId)
 
     # Create a question.
     question = Question(questionId=str(uuid.uuid4()), lecture=lecture,
@@ -335,15 +331,14 @@ class EditQuestionApi(Resource):
     course = Course.query.get(courseId)
 
     if (not course):
-      abort(400, message = "Unknown course %s" % courseId)
+      return error(EBADCOURSEID, courseId)
 
     question = Question.query.get(questionId)
     if (not question):
-      abort(400, message = "Unknown question id %s" % questionId)
+      return error(EBADQUESTIONID, questionId)
     # Check that the question belongs to the course.
     if question.lecture.course != course:
-      abort(400, message=  "Question id %s corresponds to a different course" %\
-        questionId)
+      return error(EQUESTIONMISMATCH, questionId, courseId)
 
     # Parse arguments.
     args = self.reqparse.parse_args()
@@ -357,13 +352,13 @@ class EditQuestionApi(Resource):
 
     # Check that the answer choices are valid.
     if choices is None or len(choices) == 0:
-      abort(400, message = "Missing choices")
+      return error(EMISSINGARG, "choices")
     if correctChoices is None or len(correctChoices) == 0:
-      abort(400, message = "Missing correct choices")
+      return error(EMISSINGARG, "correct-choices")
     choices = set(choices)
     correctChoices = set(correctChoices)
     if not correctChoices <= choices:
-      abort(400, message = "Correct choices not a subset of all choices")
+      return error(ECORRECTNONSUBSET, ppset(correctChoices), ppset(choices))
 
     # Check lecture.
     if (lectureId and lectureId != question.lectureId):
@@ -421,14 +416,14 @@ class ResponseRoundsApi(Resource):
     studentId = getArg(args, "studentId")
 
     if (not course):
-      return error("Unknown course id %s" % courseId)
+      return error(EBADCOURSEID, courseId)
 
     if (not question):
-      return error("Unknown question id %s" % questionId)
+      return error(EBADQUESTIONID, questionId)
 
     # Verify that the question's lecture is associated with the course.
     if (question.lecture.course != course):
-      return error("Question id %s is for a different course" % questionId)
+      return error(EQUESTIONMISMATCH, questionId, courseId)
 
     responses = []
 
@@ -465,19 +460,28 @@ class ResponseApi(Resource):
     '''
     course = Course.query.get(courseId)
     question = Question.query.get(questionId)
+    args = self.reqparse.parse_args()
+    choiceId = getArg(args, "choiceId")
+
+    if (not course):  return error(EBADCOURSEID, courseId)
+    if (not question):  return error(EBADQUESTIONID, questionId)
+
     # Check that the question belongs to the course.
     if question.lecture.course != course:
-      return None
+      return error(EQUESTIONMISMATCH, questionId, courseId)
 
     # Check if there's  an active round.
     if question.activeRound == "":
-      return None
+      return error(ENOACTIVEROUND, questionId) 
 
     choice = Choice.query.get(choiceId)
+    if (not choice):
+      return error(EBADCHOICEID, choiceId)
+
     # Make sure choice corresponds to question.
     if choice.question != question:
-      return None
-
+      return error(ECHOICEMISMATCH, choiceId, questionId)
+      
     # TODO: Once user logins/identities are implemented, we'll pull the student
     # ID from the session. For now, we hardcode it as being the answer
     # for...some random student in the class.
