@@ -164,6 +164,7 @@ class QuestionsApi(Resource):
     self.getReqparse = reqparse.RequestParser()
     self.getReqparse.add_argument('lectureId', type=str)
     self.getReqparse.add_argument('tag', type=str, action='append')
+    self.getReqparse.add_argument('questionId', type=str)
 
     # Arguments for post()
     self.postReqparse = reqparse.RequestParser()
@@ -186,13 +187,22 @@ class QuestionsApi(Resource):
     args = self.getReqparse.parse_args()
     lectureId = getArg(args, "lectureId")
     rawTags = getArg(args, "tag")
+    questionId = getArg(args, 'questionId')
     tags = set(rawTags if rawTags else [])
     course = Course.query.get(courseId)
     qDesc = [('questionId', 'lectureId', 'title', \
-      'questionBody', ('tags', [('tagId', 'tagText')]))]
+      'questionBody', ('tags', [('tagId', 'tagText')]), 'activeRound')]
 
     if course == None:
       return error(EBADCOURSEID, courseId)
+
+    if questionId != None:
+      question = Question.query.get(questionId)
+      
+      if (question == None):
+        return error(EBADQUESTIONID, questionId)
+
+      return myJson3([question], qDesc)
 
     if lectureId is None:
       # Get all questions for course across all lectures.
@@ -534,13 +544,20 @@ class RoundEndApi(Resource):
     '''
     course = Course.query.get(courseId)
     question = Question.query.get(questionId)
+
+    if (not course):
+      return error(EBADCOURSEID, courseId)
+
+    if (not question):
+      return error(EBADQUESTIONID, questionId)
+
     # Check that the question belongs to the course.
     if question.lecture.course != course:
-      return None
+      return error(EQUESTIONMISMATCH, questionId, courseId)
 
     # Check if there's no active round.
-    if question.activeRound == "":
-      return None
+    if question.activeRound == "" or question.activeRound == None:
+      return error(ENOACTIVEROUND, questionId)
 
     # Alright, close this round.
     now = int(time.time())
@@ -548,7 +565,8 @@ class RoundEndApi(Resource):
     answerRound.endTime = now
     question.activeRound = ""
     db.session.commit()
-    return myJson(answerRound)
+    return myJson3(answerRound, ('roundId', 'questionId', 'startTime', \
+      'endTime', ('responses', [('responseId', 'roundId', 'studentId', 'choiceId')])))
 
 api.add_resource(RoundEndApi,
   '/courses/<string:courseId>/question/<string:questionId>/end',

@@ -224,7 +224,8 @@ class TestCase(unittest.TestCase):
             return { 'questionId': m.questionId, 'title': m.title, \
                 'tags': list(map(lambda t: \
                     { 'tagId': t.tagId, 'tagText': t.tagText }, m.tags)), \
-                'questionBody': m.questionBody, 'lectureId': m.lectureId }
+                'questionBody': m.questionBody, 'lectureId': m.lectureId, \
+                'activeRound': m.activeRound }
 
         self.assertJSON("/courses/" + vals.course3.courseId + "/questions", \
             [ q(vals.question2), q(vals.question3), q(vals.question4),\
@@ -509,10 +510,6 @@ class TestCase(unittest.TestCase):
           '/question/' + vals.question4.questionId + '/start', \
           EQUESTIONMISMATCH, vals.question4.questionId, vals.course2.courseId)
 
-        self.assertErrorPost('/courses/' + vals.course2.courseId + \
-          '/question/' + vals.question4.questionId + '/start', \
-          EQUESTIONMISMATCH, vals.question4.questionId, vals.course2.courseId)
-
         # Question already has active round
         self.assertErrorPost('/courses/' + vals.course3.courseId + \
           '/question/' + vals.question5.questionId + '/start', \
@@ -527,6 +524,37 @@ class TestCase(unittest.TestCase):
 
     def test_RoundEndApi(self):
         vals = dbPopulateDummyValues(db)
+        # Bad courseId or questionId
+        self.assertErrorPost('/courses/BADVAL/question/BADID/end', EBADCOURSEID,
+          'BADVAL')
+
+        self.assertErrorPost('/courses/%s/question/%s/end' % \
+          (vals.course2.courseId, 'BADID'), EBADQUESTIONID, 'BADID')
+
+        self.assertErrorPost('/courses/%s/question/%s/end' % \
+          (vals.course2.courseId, vals.question4.questionId), \
+          EQUESTIONMISMATCH, vals.question4.questionId, vals.course2.courseId)
+
+        # No active round for question
+        self.assertErrorPost('/courses/%s/question/%s/end' % \
+          (vals.course3.courseId, vals.question4.questionId),
+          ENOACTIVEROUND, vals.question4.questionId)
+
+        # Successfull round end
+        q = self.getJSON('/courses/%s/questions?questionId=%s' % \
+          (vals.course3.courseId, vals.question5.questionId))[0]
+
+        assert q['activeRound'] != ''
+
+        r = self.postJSON('/courses/%s/question/%s/end' % \
+          (vals.course3.courseId, vals.question5.questionId))
+
+        assert r['questionId'] == vals.question5.questionId
+
+        q = self.getJSON('/courses/%s/questions?questionId=%s' % \
+          (vals.course3.courseId, vals.question5.questionId))[0]
+
+        assert q['activeRound'] == ''
 
     def test_LecturesApi(self):
         vals = dbPopulateDummyValues(db)
