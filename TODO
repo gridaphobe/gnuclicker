@@ -1,0 +1,17 @@
+1. Not consistent error behavior between get and put/post methods. Get always return 200, while put/post return 400 on error behavior
+
+2. Behavior of editting questions not clearly defined. (find TODO in tests/test_backend.py)
+
+3. Finish test_QuestionEdittingApi
+
+5. Make a note about the return values - { res: ... } vs. { error: ... }
+
+6. Make a note about how tests work
+
+7. When sending question info to students, we should omit whether a choice is correct or not for active questions
+
+8. Do we need an api to get Round details?
+
+9. Questions api is inconsistent - it allows questionIds as parameters. Needs a QuestionDetails api instead
+
+10. We should put the object descriptors passed to myJson in some more central place
