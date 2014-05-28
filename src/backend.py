@@ -21,28 +21,25 @@ def getArg(args, name):
 def hasArg(args, name):
   return name in args and args[name] != None
 
-def objectify3(o, t):
+def objectify(o, t):
   if (isinstance(t, tuple)):
     res = {}
     for k in t:
       if (isinstance(k, tuple)):
-        res[k[0]] = objectify3(getattr(o, k[0]), k[1])
+        res[k[0]] = objectify(getattr(o, k[0]), k[1])
       else:
         res[k] = getattr(o, k)
     return res
   elif (isinstance(t, list)):
-    return map(lambda x: objectify3(x, t[0]), o)
+    return map(lambda x: objectify(x, t[0]), o)
   else:
     return o
     
 # jsonify() seems to insist that no arrays can be used as top-level
 # json objects. To satisfy it, for now wrap everything in a top-level
 # { res: ... } object
-def myJson(o): 
-    return jsonify(res = objectify(o))
-
-def myJson3(o, t): 
-    return jsonify(res = objectify3(o, t))
+def myJson(o, t): 
+    return jsonify(res = objectify(o, t))
 
 class CoursesListApi(Resource):
   def __init__(self):
@@ -84,7 +81,7 @@ class CoursesListApi(Resource):
       # Return all classes
       res = Course.query.all()
 
-    return myJson3(res, [("courseId", "courseTitle", "instructorId")])
+    return myJson(res, [("courseId", "courseTitle", "instructorId")])
  
 api.add_resource(CoursesListApi, '/courses', endpoint='courses_list')
 
@@ -95,7 +92,7 @@ class LecturesListApi(Resource):
     '''
     course = Course.query.get(courseId)
     if course:
-      return myJson3(course.lectures, [('courseId', 'lectureTitle', \
+      return myJson(course.lectures, [('courseId', 'lectureTitle', \
         'lectureId', 'date' )])
     else:
       return error(EBADCOURSEID, courseId)
@@ -125,7 +122,7 @@ class CourseStudentManifestApi(Resource):
 
     if lectureId is None:
       # Return all students enrolled in class.
-      return myJson3(course.students, userDesc)
+      return myJson(course.students, userDesc)
     else:
       # Return all students attending a lecture.
       lecture = Lecture.query.get(lectureId)
@@ -143,7 +140,7 @@ class CourseStudentManifestApi(Resource):
           for response in answerRound.responses:
             students.add(User.query.get(response.studentId))
 
-      return myJson3(list(students), userDesc)
+      return myJson(list(students), userDesc)
 
 api.add_resource(CourseStudentManifestApi,
   '/courses/<string:courseId>/students', endpoint='course_student_manifest')
@@ -155,7 +152,7 @@ class UserApi(Resource):
     '''
     user = User.query.get(userId)
     if (user):
-      return myJson3(user, ( 'userId', 'universityId', 'name' ))
+      return myJson(user, ( 'userId', 'universityId', 'name' ))
     else:
       return error(EBADUSERID, userId)
 
@@ -205,7 +202,7 @@ class QuestionsApi(Resource):
       if (question == None):
         return error(EBADQUESTIONID, questionId)
 
-      return myJson3([question], qDesc)
+      return myJson([question], qDesc)
 
     if lectureId is None:
       # Get all questions for course across all lectures.
@@ -218,7 +215,7 @@ class QuestionsApi(Resource):
             questionTags = set([tag.tagText for tag in question.tags])
             if tags <= questionTags:
               questions.append(question)
-      return myJson3(questions, qDesc)
+      return myJson(questions, qDesc)
     else:
       lecture = Lecture.query.get(lectureId)
       if (not lecture):
@@ -226,7 +223,7 @@ class QuestionsApi(Resource):
       if lecture.course != course:
         return error(ELECTUREMISMATCH, lectureId, courseId)
       if tags is None:
-        return myJson3(lecture.questions, qDesc)
+        return myJson(lecture.questions, qDesc)
       else:
         questions = []
         for question in lecture.questions:
@@ -234,7 +231,7 @@ class QuestionsApi(Resource):
 
           if tags <= questionTags:
             questions.append(question)
-        return myJson3(questions, qDesc)
+        return myJson(questions, qDesc)
 
   def post(self, courseId):
     '''
@@ -303,7 +300,7 @@ class QuestionsApi(Resource):
 
     # Alright, commit to db.
     db.session.commit()
-    return myJson3(question, ('questionId', 'lectureId', 'title', \
+    return myJson(question, ('questionId', 'lectureId', 'title', \
       'questionBody', \
       ('choices', [('choiceId', 'choiceValid', 'choiceStr')]), 
       ('correctChoices', [('choiceId', 'choiceValid', 'choiceStr')]), ))
@@ -389,7 +386,7 @@ class EditQuestionApi(Resource):
 
     # Alright, commit.
     db.session.commit()
-    return myJson3(question, ('questionId', 'lectureId', 'title', \
+    return myJson(question, ('questionId', 'lectureId', 'title', \
       'questionBody', \
       ('choices', [('choiceId', 'choiceValid', 'choiceStr')]), 
       ('correctChoices', [('choiceId', 'choiceValid', 'choiceStr')]), ))
@@ -435,7 +432,7 @@ class ResponseRoundsApi(Resource):
         responses.extend([response for response in answerRound.responses
           if response.studentId == studentId])
 
-    return myJson3(responses, \
+    return myJson(responses, \
       [('responseId', 'roundId', 'studentId', 'choiceId')])
 
 api.add_resource(ResponseRoundsApi,
@@ -496,7 +493,7 @@ class ResponseApi(Resource):
     db.session.add(response)
     db.session.commit()
 
-    return myJson3(response, ('responseId', 'roundId', 'studentId', 'choiceId'))
+    return myJson(response, ('responseId', 'roundId', 'studentId', 'choiceId'))
 
 api.add_resource(ResponseApi,
   '/courses/<string:courseId>/question/<string:questionId>/respond',
@@ -533,7 +530,7 @@ class RoundStartApi(Resource):
     question.activeRound = answerRound.roundId
     db.session.add(answerRound)
     # Done, return round.
-    return myJson3(answerRound, ('roundId', 'questionId', 'startTime', \
+    return myJson(answerRound, ('roundId', 'questionId', 'startTime', \
       'endTime', ('responses', [('responseId', 'roundId', 'studentId', 'choiceId')])))
 
 api.add_resource(RoundStartApi,
@@ -568,7 +565,7 @@ class RoundEndApi(Resource):
     answerRound.endTime = now
     question.activeRound = ""
     db.session.commit()
-    return myJson3(answerRound, ('roundId', 'questionId', 'startTime', \
+    return myJson(answerRound, ('roundId', 'questionId', 'startTime', \
       'endTime', ('responses', [('responseId', 'roundId', 'studentId', 'choiceId')])))
 
 api.add_resource(RoundEndApi,
@@ -591,7 +588,7 @@ class LecturesApi(Resource):
     if (not course):
       return error(EBADCOURSEID, courseId)
 
-    return myJson3(course.lectures, [('lectureId', 'courseId', 'lectureTitle', \
+    return myJson(course.lectures, [('lectureId', 'courseId', 'lectureTitle', \
       'date')])
 
   def post(self, courseId):
@@ -611,7 +608,7 @@ class LecturesApi(Resource):
 
     db.session.add(lecture)
     db.session.commit()
-    return myJson3(lecture,('lectureId', 'courseId', 'lectureTitle', 'date'))
+    return myJson(lecture,('lectureId', 'courseId', 'lectureTitle', 'date'))
 
 api.add_resource(LecturesApi, '/courses/<string:courseId>/lectures',
   endpoint='lectures')
@@ -639,7 +636,7 @@ class LectureDetailsApi(Resource):
     if lecture.course != course:
       return error(ELECTUREMISMATCH, lectureId, courseId)
 
-    return myJson3(lecture, ('lectureId', 'courseId', 'lectureTitle', 'date'))
+    return myJson(lecture, ('lectureId', 'courseId', 'lectureTitle', 'date'))
 
   def put(self, courseId, lectureId):
     '''
@@ -666,7 +663,7 @@ class LectureDetailsApi(Resource):
       lecture.date = datetime.datetime.fromtimestamp(int(getArg(args, "date")))
 
     db.session.commit()
-    return myJson3(lecture, ('lectureId', 'courseId', 'lectureTitle', 'date'))
+    return myJson(lecture, ('lectureId', 'courseId', 'lectureTitle', 'date'))
 
 api.add_resource(LectureDetailsApi,
   '/courses/<string:courseId>/lectures/<string:lectureId>',

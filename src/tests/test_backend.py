@@ -9,7 +9,7 @@ from os.path import *
 sys.path.insert(0, join(dirname(realpath(__file__)), pardir))
 
 from config import basedir
-from backend import app, objectify3
+from backend import app, objectify
 from Model import db, User
 from db_dummy_populate import * 
 from json import dumps
@@ -567,7 +567,7 @@ class TestCase(unittest.TestCase):
 
         self.assertErrorGet('/courses/BADVAL/lectures', EBADCOURSEID, 'BADVAL')
         self.assertJSON('/courses/%s/lectures' % vals.course2.courseId,
-          objectify3(vals.course2.lectures, lectDesc))
+          objectify(vals.course2.lectures, lectDesc))
 
     def test_LecturesApi_post(self):
         vals = dbPopulateDummyValues(db)
@@ -613,7 +613,7 @@ class TestCase(unittest.TestCase):
         # Successfull get
         self.assertJSON('/courses/%s/lectures/%s' % \
             (vals.course2.courseId, vals.course2.lectures[0].lectureId),
-            objectify3(vals.course2.lectures[0], lectDesc))
+            objectify(vals.course2.lectures[0], lectDesc))
 
     def test_LecturesDetailsApi_post(self):
         vals = dbPopulateDummyValues(db)
