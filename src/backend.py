@@ -18,6 +18,9 @@ api = Api(app)
 def getArg(args, name):
   return args.get(name, None)
 
+def hasArg(args, name):
+  return name in args and args[name] != None
+
 def objectify3(o, t):
   if (isinstance(t, tuple)):
     res = {}
@@ -584,6 +587,10 @@ class LecturesApi(Resource):
     Get all lectures for course.
     '''
     course = Course.query.get(courseId)
+
+    if (not course):
+      return error(EBADCOURSEID, courseId)
+
     return myJson3(course.lectures, [('lectureId', 'courseId', 'lectureTitle', \
       'date')])
 
@@ -622,26 +629,44 @@ class LectureDetailsApi(Resource):
     '''
     course = Course.query.get(courseId)
     lecture = Lecture.query.get(lectureId)
+
+    if (not course):
+      return error(EBADCOURSEID, courseId)
+
+    if (not lecture):
+      return error(EBADLECTUREID, lectureId)
+
     if lecture.course != course:
-      return None
-    return myJson(lecture)
+      return error(ELECTUREMISMATCH, lectureId, courseId)
+
+    return myJson3(lecture, ('lectureId', 'courseId', 'lectureTitle', 'date'))
 
   def put(self, courseId, lectureId):
     '''
     Update lecture details.
     '''
     args = self.reqparse.parse_args()
-    title = getArg(args, "title")
-    date = datetime.datetime.fromtimestamp(int(getArg(args, "date")))
     course = Course.query.get(courseId)
     lecture = Lecture.query.get(lectureId)
+
+    if (not course):
+      return error(EBADCOURSEID, courseId)
+
+    if (not lecture):
+      return error(EBADLECTUREID, lectureId)
+
     if lecture.course != course:
-      return None
+      return error(ELECTUREMISMATCH, lectureId, courseId)
+
     # Update details.
-    lecture.title = title
-    lecture.date = date
+    if (hasArg(args, "title")):
+      lecture.lectureTitle = getArg(args, "title")
+
+    if (hasArg(args, "date")):
+      lecture.date = datetime.datetime.fromtimestamp(int(getArg(args, "date")))
+
     db.session.commit()
-    return myJson(lecture)
+    return myJson3(lecture, ('lectureId', 'courseId', 'lectureTitle', 'date'))
 
 api.add_resource(LectureDetailsApi,
   '/courses/<string:courseId>/lectures/<string:lectureId>',

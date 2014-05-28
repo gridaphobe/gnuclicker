@@ -17,12 +17,14 @@ from flask import jsonify
 from error import *
 from datetime import datetime
 
+def jsonifyTime(t): return t.strftime("%a, %d %b %Y %H:%M:%S GMT")
+
 #
 # Equal Modulo Order
 #
 def equalModuloOrder(obj, template):
     if (isinstance(template, datetime)):
-      template = template.strftime("%a, %d %b %Y %H:%M:%S GMT")
+      template = jsonifyTime(template)
 
     if isinstance(template, list):
         if (not isinstance(obj, list) or len(obj) != len(template)):
@@ -595,9 +597,68 @@ class TestCase(unittest.TestCase):
         assert len(newLects) == 1 + len(oldLects)
         assert l in newLects and l not in oldLects
 
-    def test_LecturesDetailsApi(self):
+    def test_LecturesDetailsApi_get(self):
         vals = dbPopulateDummyValues(db)
-        
+        lectDesc = ('lectureId', 'courseId', 'lectureTitle', 'date')
+
+        # Bad Course/Lecture Ids
+        self.assertErrorGet('/courses/BADVAL/lectures/BADID', EBADCOURSEID, \
+          'BADVAL')
+        self.assertErrorGet('/courses/%s/lectures/BADID' % \
+          vals.course2.courseId, EBADLECTUREID, 'BADID')
+        self.assertErrorGet('/courses/%s/lectures/%s' % \
+            (vals.course1.courseId, vals.lecture3.lectureId), ELECTUREMISMATCH,\
+            vals.lecture3.lectureId, vals.course1.courseId)
+
+        # Successfull get
+        self.assertJSON('/courses/%s/lectures/%s' % \
+            (vals.course2.courseId, vals.course2.lectures[0].lectureId),
+            objectify3(vals.course2.lectures[0], lectDesc))
+
+    def test_LecturesDetailsApi_post(self):
+        vals = dbPopulateDummyValues(db)
+        lectDesc = ('lectureId', 'courseId', 'lectureTitle', 'date')
+
+        # Bad Course/Lecture Ids
+        self.assertErrorPut('/courses/BADVAL/lectures/BADID', EBADCOURSEID, \
+          'BADVAL')
+        self.assertErrorPut('/courses/%s/lectures/BADID' % \
+          vals.course2.courseId, EBADLECTUREID, 'BADID')
+        self.assertErrorPut('/courses/%s/lectures/%s' % \
+            (vals.course1.courseId, vals.lecture3.lectureId), ELECTUREMISMATCH,\
+            vals.lecture3.lectureId, vals.course1.courseId)
+
+        # Update without changing anything
+        oldL = self.getJSON('/courses/%s/lectures/%s' % \
+            (vals.course2.courseId, vals.course2.lectures[0].lectureId))
+
+        l = self.putJSON('/courses/%s/lectures/%s' % \
+            (vals.course2.courseId, vals.course2.lectures[0].lectureId))
+
+        assert l == oldL
+        oldL = l
+
+        # Update title
+        l = self.putJSON('/courses/%s/lectures/%s?title=NEW' % \
+            (vals.course2.courseId, vals.course2.lectures[0].lectureId))
+        l1 = self.getJSON('/courses/%s/lectures/%s' % \
+            (vals.course2.courseId, vals.course2.lectures[0].lectureId))
+
+        assert l == l1
+        assert l != oldL
+        assert l['lectureTitle'] == 'NEW'
+        oldL = l
+
+        # Update date
+        l = self.putJSON('/courses/%s/lectures/%s?date=42' % \
+            (vals.course2.courseId, vals.course2.lectures[0].lectureId))
+        l1 = self.getJSON('/courses/%s/lectures/%s' % \
+            (vals.course2.courseId, vals.course2.lectures[0].lectureId))
+
+        assert l == l1
+        assert l != oldL
+        assert l['date'] != oldL['date']
+        assert l['date'] == jsonifyTime(datetime.fromtimestamp(42))
 
 if __name__ == '__main__':
     unittest.main()
