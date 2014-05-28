@@ -1,0 +1,15 @@
+<div class="desktop">
+  <div class="item brand"><a href="/">Gnu/Clicker</a></div>
+  <div class="item home %sel-home%"><a href="/instructor/">Home</a></div>
+  {% block nav_items %}{% endblock %}
+  <div class="item home right %sel-login%"><a href="/login">Login</a></div>
+</div>
+<div class="mobile">
+  <div class="item brand"><a href="/">Gnu/Clicker</a></div>
+  <div class="item right dropdown-expand"><a href="#" onclick="return false;">Home &#x25be;</a></div>
+  <ul class="dropdown">
+    <li><a href="/instructor/">Home</a></li>
+    {{ self.nav_items() }}
+    <li><a href="/login">Login</a></li>
+  </ul>
+</div>

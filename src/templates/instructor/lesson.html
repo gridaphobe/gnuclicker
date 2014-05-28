@@ -1,0 +1,40 @@
+{% extends "page.html" %}
+
+{% import "macros.html" as macros %}
+
+{% block javascript %}
+  <script type="text/javascript" src="/static/js/lesson.js"></script>
+{% endblock %}
+  
+{% block nav_items %}
+  {{ macros.course_list(courses) }}
+{% endblock %}
+
+{% block body %}
+  <div class="lessons">
+    <div class="heading">Lessons</div>
+    {% for lesson in lessons %}
+      <div class="item">{{ lesson.name }}</div>
+    {% endfor %}
+    <div class="item add">+ Add Lesson</div>
+  </div>
+  <div class="questions">
+    <div class="heading">questions</div>
+    {% for question in questions %}
+      <a class="item" href="/questions?q={{ question.id }}">{{ question.name }}</a>
+      <div class="content hide">
+        <div class="text">{{ question.prompt }}</div>
+        {% for answer in question.answers %}
+          <div class="answer">
+            <div class="text">{{ answer.text }}</div>
+            <div class="result" style="width: {{ answer.percent }}%;">{{ answer.percent }}%</div>
+          </div>
+        {% endfor %}
+        <div class="buttons">
+          <button>Open Poll</button> <button>Clear Results</button>
+        </div>
+      </div>
+    {% endfor %}
+    <a class="item add">+ add question</a>
+  </div>
+{% endblock %}

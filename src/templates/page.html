@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" type="text/css" href="/static/style.css" />
+  <title>Home</title>
+  <script type="text/javascript" src="/static/js/ui.js"></script>
+  {% block javascript %}
+  {% endblock %}
+</head>
+<body>
+
+<div class="page portal">
+  <div class="nav">
+    <div class="desktop">
+      <div class="item brand"><a href="/">Gnu/Clicker</a></div>
+      <div class="item home %sel-home%"><a href="/instructor/">Home</a></div>
+      {% block nav_items %}{% endblock %}
+      <div class="item home right %sel-login%"><a href="/login">Login</a></div>
+    </div>
+    <div class="mobile">
+      <div class="item brand"><a href="/">Gnu/Clicker</a></div>
+      <div class="item right dropdown-expand"><a href="#" onclick="return false;">Home &#x25be;</a></div>
+      <ul class="dropdown">
+        <li><a href="/instructor/">Home</a></li>
+        {{ self.nav_items() }}
+        <li><a href="/login">Login</a></li>
+      </ul>
+    </div>
+  </div>
+  <div id="body">
+    {% block body %}{% endblock %}
+  </div>
+</div>
+
+</body>
+</html>

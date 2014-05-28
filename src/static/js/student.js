@@ -3,7 +3,7 @@
 
   // hard-coded defaults...
   var userId     = "fea31132-33ca-400f-a170-4308e5aeec6d";
-  var courseId   = "3a26346e-b59d-439b-890f-2e0c64a21f9a";
+  var courseId   = "7620cfb2-1ca8-469b-ae53-e77e5c2f79d1";
   var questionId = "7b49eed0-6ee7-4d4f-b81e-fd8516edcaac";
 
   function pick(e) {
@@ -32,9 +32,9 @@
              submitted.classList.remove("hidden");
            });
 
-    window.setTimeout(function() {
-      flower.classList.add("hidden");
-    }, 1000);
+    // window.setTimeout(function() {
+    //   submitting.classList.add("hidden");
+    // }, 1000);
 
     e.stopPropagation();
     e.preventDefault();

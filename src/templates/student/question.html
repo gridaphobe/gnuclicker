@@ -1,0 +1,43 @@
+{% extends "page.html" %}
+
+{% import "macros.html" as macros %}
+
+{% block javascript %}
+  <script type="text/javascript" src="/static/js/student.js"></script>
+{% endblock %}
+
+{% block nav_items %}
+  {{ macros.course_list(courses) }}
+{% endblock %}
+
+{% block body %}
+  <div class="question">
+    <div class="header">
+      <h3>{{ question.name }}<span class="course">{{ question.course }}</span></h3>
+    </div>
+    <div class="body">
+      <h4 class="prompt">{{ question.prompt }}</h4>
+      {% set ids = cycler('a','b','c','d','e') %}
+      {% for answer in question.answers %}
+        {% if not loop.index == 0 %}
+          <div class="space"></div>
+        {% endif %}
+        <div class="answer student-response" id="answer-{{ ids.current }}">
+          {{ ids.next()|capitalize }}. {{ answer.text }}
+        </div>
+      {% endfor %}
+    </div>
+    <div class="footer">
+      <div id="submitting" class="hidden">
+        <img id="flower-gear" src="http://www.millan.net/anims/gifs/snurra.gif">
+      </div>
+      <div id="submitted" class="hidden">
+        <img id="check-mark" src="/static/check-mark-3-64.png">
+          Your answer "<span id="submitted-answer"></span>" has been successfully submitted.
+      </div>
+      <div class="timer">
+        Timer: <span id="timer">29</span> sec
+      </div>
+    </div>
+  </div>
+{% endblock %}
