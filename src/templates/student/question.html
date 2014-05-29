@@ -1,16 +1,17 @@
 {% extends "page.html" %}
 
 {% import "macros.html" as macros %}
+
 {% set question = extra.question %}
 {% set course   = extra.course %}
-
+{% set round    = question.getActiveRound() %}
 
 {% block javascript %}
   <script type="text/javascript" src="/static/js/jquery-1.11.1.min.js"></script>
   <script type="text/javascript" src="/static/js/student.js"></script>
   <script type="text/javascript">
-    var courseId   = "{{ course.courseId }}"
-    var questionId = "{{ question.questionId }}"
+    var courseId   = "{{ course.courseId }}";
+    var questionId = "{{ question.questionId }}";
   </script>
 {% endblock %}
 
@@ -44,7 +45,11 @@
           Your answer "<span id="submitted-answer"></span>" has been successfully submitted.
       </div>
       <div class="timer">
-        Timer: <span id="timer">29</span> sec
+        {% if round %}
+          Timer: <span id="timer">{{ round.startTime - extra.currentTime }}</span> sec
+        {% else %}
+          No active round
+        {% endif %}
       </div>
     </div>
   </div>

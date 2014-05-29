@@ -1,10 +1,7 @@
 (function() {
   "use strict";
 
-  // hard-coded defaults...
-  var userId     = "fea31132-33ca-400f-a170-4308e5aeec6d";
-  var courseId   = "7620cfb2-1ca8-469b-ae53-e77e5c2f79d1";
-  var questionId = "7b49eed0-6ee7-4d4f-b81e-fd8516edcaac";
+  var timer;
 
   function pick(e) {
     var target = this;
@@ -39,8 +36,13 @@
 
   window.addEventListener("load", function() {
     var matches = document.querySelectorAll(".student-response");
-    for(var i = 0; i < matches.length; i++) {
-      matches[i].addEventListener("click", pick);
+
+    if ((timer = document.getElementById("timer"))) {
+      // active round
+      for (var i = 0; i < matches.length; i++) {
+        matches[i].addEventListener("click", pick);
+      }
+      window.setInterval(function() { timer.innerHTML = 1 + parseInt(timer.innerHTML)}, 1000);
     }
   });
 })();

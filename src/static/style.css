@@ -339,6 +339,9 @@ ul.dropdown.show {
     border-top: 1px solid #d5d5d5;
     height: 35px;
     line-height: 35px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
   }
 
   .questions > .item:hover {
@@ -377,6 +380,10 @@ ul.dropdown.show {
   }
 
   .questions > .content > .answer {
+  }
+
+  .questions > .content > .answer.correct {
+    font-weight: bold;
   }
 
     .questions > .content > .text {
