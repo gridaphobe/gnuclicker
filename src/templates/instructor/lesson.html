@@ -2,6 +2,10 @@
 
 {% import "macros.html" as macros %}
 
+{% set questions = extra.questions %}
+{% set course  = extra.course %}
+{% set courses = extra.courses %}
+
 {% block javascript %}
   <script type="text/javascript" src="/static/js/lesson.js"></script>
 {% endblock %}
@@ -13,21 +17,32 @@
 {% block body %}
   <div class="lessons">
     <div class="heading">Lessons</div>
-    {% for lesson in lessons %}
-      <div class="item">{{ lesson.name }}</div>
+    {% for lecture in course.lectures %}
+      <div class="item">{{ lecture.lectureTitle }}</div>
     {% endfor %}
     <div class="item add">+ Add Lesson</div>
   </div>
   <div class="questions">
     <div class="heading">questions</div>
     {% for question in questions %}
-      <a class="item" href="/questions?q={{ question.id }}">{{ question.name }}</a>
+      {% if question.rounds|count > 0 %}
+        {% set round = question.rounds[0] %}
+        {% set responses = round.responses|count %}
+      {% else %}
+        {% set responses = None %}
+      {% endif %}
+      <a class="item" href="/courses/{{ course.courseId }}/questions?questionId={{ question.id }}">{{ question.title }}</a>
       <div class="content hide">
-        <div class="text">{{ question.prompt }}</div>
-        {% for answer in question.answers %}
+        <div class="text">{{ question.questionBody }}</div>
+        {% for choice in question.choices %}
+          {% if responses %}
+            {% set percent = round.choicesOf(choice.choiceId)|count / responses * 100 %}
+          {% else %}
+            {% set percent = 0 %}
+          {% endif %}
           <div class="answer">
-            <div class="text">{{ answer.text }}</div>
-            <div class="result" style="width: {{ answer.percent }}%;">{{ answer.percent }}%</div>
+            <div class="text">{{ choice.choiceStr }}</div>
+            <div class="result" style="width: {{ percent }}%;">{{ percent }}%</div>
           </div>
         {% endfor %}
         <div class="buttons">

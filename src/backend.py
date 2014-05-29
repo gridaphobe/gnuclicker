@@ -210,7 +210,7 @@ class QuestionsApi(Resource):
     questionId = getArg(args, 'questionId')
     tags = set(rawTags if rawTags else [])
     course = Course.query.get(courseId)
-    qDesc = [('questionId', 'lectureId', 'title', \
+    qDesc = [('questionId', 'lectureId', 'title',
               'questionBody', ('tags', [('tagId', 'tagText')]), 'activeRound',
               ('choices', [('choiceId','choiceStr','choiceValid')]))]
 
@@ -227,8 +227,8 @@ class QuestionsApi(Resource):
 
       return {'res': objectify([question], qDesc),
               'extra': {'courses': courses,
-                        'courseId': question.lecture.courseId,
-                        'courseTitle': question.lecture.course.courseTitle},
+                        'question': question,
+                        'course': course},
               'template' : 'student/question.html'}
 
     if lectureId is None:
@@ -242,7 +242,12 @@ class QuestionsApi(Resource):
             questionTags = set([tag.tagText for tag in question.tags])
             if tags <= questionTags:
               questions.append(question)
-      return myJson(questions, qDesc)
+      return {'res': objectify(questions, qDesc),
+              'extra': {'courses': courses,
+                        'course': course,
+                        'questions': questions,
+                        'lectures': course.lectures},
+              'template' : 'instructor/lesson.html'}
     else:
       lecture = Lecture.query.get(lectureId)
       if (not lecture):
@@ -250,7 +255,12 @@ class QuestionsApi(Resource):
       if lecture.course != course:
         return error(ELECTUREMISMATCH, lectureId, courseId)
       if tags is None:
-        return myJson(lecture.questions, qDesc)
+        return {'res': objectify(lecture.questions, qDesc),
+                'extra': {'courses': courses,
+                          'course': course,
+                          'questions': questions,
+                          'lectures': course.lectures},
+                'template' : 'instructor/lesson.html'}
       else:
         questions = []
         for question in lecture.questions:
@@ -258,7 +268,12 @@ class QuestionsApi(Resource):
 
           if tags <= questionTags:
             questions.append(question)
-        return myJson(questions, qDesc)
+      return {'res': objectify(questions, qDesc),
+              'extra': {'courses': courses,
+                        'course': course,
+                        'questions': questions,
+                        'lectures': course.lectures},
+              'template' : 'instructor/lesson.html'}
 
   def post(self, courseId):
     '''

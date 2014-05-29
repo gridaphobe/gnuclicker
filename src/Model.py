@@ -149,6 +149,8 @@ class Round(db.Model):
   startTime = db.Column(db.Integer)
   endTime = db.Column(db.Integer)
   responses = db.relationship('Response', backref='roundFor')
+  def choicesOf(self, choiceId):
+    return filter(lambda c: c.choiceId == choiceId, self.responses)
 
 class Response(db.Model):
   '''
