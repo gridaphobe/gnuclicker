@@ -1,29 +1,35 @@
 {% extends "page.html" %}
 
 {% import "macros.html" as macros %}
+{% set question = res[0] %}
 
 {% block javascript %}
+  <script type="text/javascript" src="/static/js/jquery-1.11.1.min.js"></script>
   <script type="text/javascript" src="/static/js/student.js"></script>
+  <script type="text/javascript">
+    var courseId   = "{{ extra.courseId }}"
+    var questionId = "{{ question.questionId }}"
+  </script>
 {% endblock %}
 
 {% block nav_items %}
-  {{ macros.course_list(courses) }}
+  {{ macros.course_list(extra.courses) }}
 {% endblock %}
 
 {% block body %}
   <div class="question">
     <div class="header">
-      <h3>{{ question.name }}<span class="course">{{ question.course }}</span></h3>
+      <h3>{{ question.title }}<span class="course">{{ question.course }}</span></h3>
     </div>
     <div class="body">
-      <h4 class="prompt">{{ question.prompt }}</h4>
+      <h4 class="prompt">{{ question.questionBody }}</h4>
       {% set ids = cycler('a','b','c','d','e') %}
-      {% for answer in question.answers %}
+      {% for choice in question.choices %}
         {% if not loop.index == 0 %}
           <div class="space"></div>
         {% endif %}
-        <div class="answer student-response" id="answer-{{ ids.current }}">
-          {{ ids.next()|capitalize }}. {{ answer.text }}
+        <div class="answer student-response" id="answer-{{ids.current|capitalize}}-{{ choice.choiceId }}">
+          {{ ids.next()|capitalize }}. {{ choice.choiceStr }}
         </div>
       {% endfor %}
     </div>

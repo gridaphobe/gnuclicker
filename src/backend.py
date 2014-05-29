@@ -2,6 +2,7 @@
 from flask import Flask, jsonify, make_response
 from flask.ext.restful import Api, Resource, reqparse
 from flask.ext.sqlalchemy import SQLAlchemy
+from jinja2 import Environment, FileSystemLoader
 import uuid
 import config
 from Model import db, User, Course, Lecture, Question, Choice, Tag, Response, \
@@ -14,6 +15,24 @@ from common import *
 from error import *
 
 api = Api(app)
+env = Environment(loader=FileSystemLoader('templates'))
+
+@api.representation('application/json')
+def json(data, code, headers=None):
+  try:
+    data = data['res']
+  except KeyError:
+    pass
+  resp = make_response(jsonify(res=data), code)
+  resp.headers.extend(headers or {})
+  return resp
+
+@api.representation('text/html')
+def html(data, code, headers=None):
+  resp = make_response(env.get_template(data['template']).render(data), code)
+  resp.headers.extend(headers or {})
+  return resp
+
 
 def getArg(args, name):
   return args.get(name, None)
@@ -81,8 +100,9 @@ class CoursesListApi(Resource):
       # Return all classes
       res = Course.query.all()
 
-    return myJson(res, [("courseId", "courseTitle", "instructorId")])
- 
+    return {'res': objectify(res, [("courseId", "courseTitle", "instructorId")]),
+            'template': 'instructor/index.html'}
+
 api.add_resource(CoursesListApi, '/courses', endpoint='courses_list')
 
 class LecturesListApi(Resource):
@@ -191,7 +211,10 @@ class QuestionsApi(Resource):
     tags = set(rawTags if rawTags else [])
     course = Course.query.get(courseId)
     qDesc = [('questionId', 'lectureId', 'title', \
-      'questionBody', ('tags', [('tagId', 'tagText')]), 'activeRound')]
+              'questionBody', ('tags', [('tagId', 'tagText')]), 'activeRound',
+              ('choices', [('choiceId','choiceStr','choiceValid')]))]
+
+    courses = Course.query.all()
 
     if course == None:
       return error(EBADCOURSEID, courseId)
@@ -202,7 +225,9 @@ class QuestionsApi(Resource):
       if (question == None):
         return error(EBADQUESTIONID, questionId)
 
-      return myJson([question], qDesc)
+      return {'res': objectify([question], qDesc),
+              'extra': {'courses': courses, 'courseId': question.lecture.courseId},
+              'template' : 'student/question.html'}
 
     if lectureId is None:
       # Get all questions for course across all lectures.

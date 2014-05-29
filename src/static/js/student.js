@@ -8,7 +8,8 @@
 
   function pick(e) {
     var target = this;
-    var answer = target.id.substring(7);
+    var answer = target.id.substring(7,8);
+    var choiceId = target.id.substring(9);
     var matches = document.querySelectorAll(".student-response.active");
     for(var i = 0; i < matches.length; i++) {
       matches[i].classList.remove("active");
@@ -25,16 +26,12 @@
 
     // send off ajax request...
     $.post("/courses/" + courseId + "/question/" + questionId + "/respond",
-           answer,
+           {"choiceId": choiceId},
            function (data) {
              submitting.classList.add("hidden");
              submitted_answer.innerHTML = answer;
              submitted.classList.remove("hidden");
            });
-
-    // window.setTimeout(function() {
-    //   submitting.classList.add("hidden");
-    // }, 1000);
 
     e.stopPropagation();
     e.preventDefault();
