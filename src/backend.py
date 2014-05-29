@@ -226,7 +226,9 @@ class QuestionsApi(Resource):
         return error(EBADQUESTIONID, questionId)
 
       return {'res': objectify([question], qDesc),
-              'extra': {'courses': courses, 'courseId': question.lecture.courseId},
+              'extra': {'courses': courses,
+                        'courseId': question.lecture.courseId,
+                        'courseTitle': question.lecture.course.courseTitle},
               'template' : 'student/question.html'}
 
     if lectureId is None:
