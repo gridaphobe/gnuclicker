@@ -243,18 +243,6 @@ class QuestionsApi(Resource):
     self.getReqparse.add_argument('lectureId', type=str)
     self.getReqparse.add_argument('tag', type=str, action='append')
     self.getReqparse.add_argument('questionId', type=str)
-
-    # Arguments for post()
-    self.postReqparse = reqparse.RequestParser()
-    self.postReqparse.add_argument('lectureId', type=str, required=True)
-    self.postReqparse.add_argument('title', type=str, required=True)
-    self.postReqparse.add_argument('body', type=str, required=True)
-    self.postReqparse.add_argument('choices', type=str, required=True,
-      action='append')
-    self.postReqparse.add_argument('correct-choices', type=str, required=True,
-      action='append')
-    self.postReqparse.add_argument('tag', type=str, action='append')
-
     super(QuestionsApi, self).__init__()
 
   def get(self, courseId):
@@ -333,6 +321,31 @@ class QuestionsApi(Resource):
                         'questions': questions,
                         'lectures': course.lectures},
               'template' : 'instructor/lesson.html'}
+api.add_resource(QuestionsApi, '/courses/<string:courseId>/questions')
+
+class AddQuestionApi(Resource):
+  def __init__(self):
+    # Arguments for get()
+    self.getReqparse = reqparse.RequestParser()
+    self.getReqparse.add_argument('lectureId', type=str)
+
+    # Arguments for post()
+    self.postReqparse = reqparse.RequestParser()
+    self.postReqparse.add_argument('lectureId', type=str, required=True)
+    self.postReqparse.add_argument('title', type=str, required=True)
+    self.postReqparse.add_argument('body', type=str, required=True)
+    self.postReqparse.add_argument('choices', type=str, required=True,
+      action='append')
+    self.postReqparse.add_argument('correct-choices', type=str, required=True,
+      action='append')
+    self.postReqparse.add_argument('tag', type=str, action='append')
+
+    super(QuestionsApi, self).__init__()
+
+  def get(self):
+    args = self.postReqparse.parse_args()
+    lectureId = getArg(args, "lectureId")
+    return {'template' : 'RAAARGH.html'}
 
   def post(self, courseId):
     '''
@@ -406,7 +419,8 @@ class QuestionsApi(Resource):
       ('choices', [('choiceId', 'choiceValid', 'choiceStr')]),
       ('correctChoices', [('choiceId', 'choiceValid', 'choiceStr')]), ))
 
-api.add_resource(QuestionsApi, '/courses/<string:courseId>/questions')
+api.add_resource(UserApi, '/courses/<string:courseId>/addQuestion',
+  endpoint='add_question')
 
 class EditQuestionApi(Resource):
   def __init__(self):
