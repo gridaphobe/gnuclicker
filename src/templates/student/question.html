@@ -6,6 +6,10 @@
 {% set course   = extra.course %}
 {% set round    = question.getActiveRound() %}
 
+{% block title %}
+  Question
+{% endblock title %}
+
 {% block javascript %}
   <script type="text/javascript" src="/static/js/student.js"></script>
   <script type="text/javascript">

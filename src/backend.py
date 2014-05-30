@@ -32,6 +32,11 @@ def tryLogin(universityId, password):
   # For now, if user exists, then login was good.
   return User.query.filter(User.universityId == universityId).scalar()
 
+class RootApi(Resource):
+  def get(self):
+    return redirect('/courses')
+api.add_resource(RootApi, '/', endpoint='root')
+
 class LogoutApi(Resource):
   def handleLogout(self):
     if g.user is not None and g.user.is_authenticated():
@@ -159,7 +164,7 @@ class CoursesListApi(Resource):
 
     return {'res': objectify(res, [("courseId", "courseTitle", "instructorId")]),
             'extra': {'courses': res},
-            'template': 'instructor/index.html'}
+            'template': 'landing.html'}
 
 api.add_resource(CoursesListApi, '/courses', endpoint='courses_list')
 
@@ -340,10 +345,10 @@ class AddQuestionApi(Resource):
       action='append')
     self.postReqparse.add_argument('tag', type=str, action='append')
 
-    super(QuestionsApi, self).__init__()
+    super(AddQuestionApi, self).__init__()
 
-  def get(self):
-    args = self.postReqparse.parse_args()
+  def get(self, courseId):
+    args = self.getReqparse.parse_args()
     lectureId = getArg(args, "lectureId")
     return {'template' : 'RAAARGH.html'}
 
@@ -419,7 +424,7 @@ class AddQuestionApi(Resource):
       ('choices', [('choiceId', 'choiceValid', 'choiceStr')]),
       ('correctChoices', [('choiceId', 'choiceValid', 'choiceStr')]), ))
 
-api.add_resource(UserApi, '/courses/<string:courseId>/addQuestion',
+api.add_resource(AddQuestionApi, '/courses/<string:courseId>/addQuestion',
   endpoint='add_question')
 
 class EditQuestionApi(Resource):
