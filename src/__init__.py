@@ -13,4 +13,5 @@ app.secret_key = "uhf981uior;u12io;br1;2ofyo;12ufp;1i2jd"
 
 db = SQLAlchemy(app, session_options = {'expire_on_commit': False})
 lm = LoginManager()
+lm.login_view = "login"
 lm.init_app(app)

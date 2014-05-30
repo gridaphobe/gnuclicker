@@ -120,6 +120,7 @@ class CoursesListApi(Resource):
     self.reqparse.add_argument('instructorId', type=str)
     super(CoursesListApi, self).__init__()
 
+  @login_required
   def get(self):
     '''
     Return all courses matching the given student and instructor id filters.
