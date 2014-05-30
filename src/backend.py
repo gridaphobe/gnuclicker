@@ -340,10 +340,10 @@ class AddQuestionApi(Resource):
       action='append')
     self.postReqparse.add_argument('tag', type=str, action='append')
 
-    super(QuestionsApi, self).__init__()
+    super(AddQuestionApi, self).__init__()
 
-  def get(self):
-    args = self.postReqparse.parse_args()
+  def get(self, courseId):
+    args = self.getReqparse.parse_args()
     lectureId = getArg(args, "lectureId")
     return {'template' : 'RAAARGH.html'}
 
@@ -419,7 +419,7 @@ class AddQuestionApi(Resource):
       ('choices', [('choiceId', 'choiceValid', 'choiceStr')]),
       ('correctChoices', [('choiceId', 'choiceValid', 'choiceStr')]), ))
 
-api.add_resource(UserApi, '/courses/<string:courseId>/addQuestion',
+api.add_resource(AddQuestionApi, '/courses/<string:courseId>/addQuestion',
   endpoint='add_question')
 
 class EditQuestionApi(Resource):
