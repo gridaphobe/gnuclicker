@@ -1,1 +1,1 @@
-web: cd src && python backend.py
+web: cd src && gunicorn backend:app
