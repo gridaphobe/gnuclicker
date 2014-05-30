@@ -7,7 +7,6 @@
 {% set round    = question.getActiveRound() %}
 
 {% block javascript %}
-  <script type="text/javascript" src="/static/js/jquery-1.11.1.min.js"></script>
   <script type="text/javascript" src="/static/js/student.js"></script>
   <script type="text/javascript">
     var courseId   = "{{ course.courseId }}";
@@ -38,11 +37,15 @@
     </div>
     <div class="footer">
       <div id="submitting" class="hidden">
-        <img id="flower-gear" src="http://www.millan.net/anims/gifs/snurra.gif">
+        <img id="flower-gear" src="http://www.millan.net/anims/gifs/snurra.gif"/>
       </div>
       <div id="submitted" class="hidden">
-        <img id="check-mark" src="/static/check-mark-3-64.png">
+        <img id="check-mark" src="/static/check-mark.png"/>
           Your answer "<span id="submitted-answer"></span>" has been successfully submitted.
+      </div>
+      <div id="submitted-error" class="hidden">
+        <img id="x-mark" src="/static/warning.png"/>
+        There was an error submitting your answer, please try again!
       </div>
       <div class="timer">
         {% if round %}
