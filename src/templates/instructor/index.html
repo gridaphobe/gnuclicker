@@ -2,8 +2,19 @@
 
 {% import "macros.html" as macros %}
 
+{% set course  = extra.course %}
 {% set courses = extra.courses %}
 
 {% block nav_items %}
   {{ macros.course_list(courses) }}
+{% endblock %}
+
+{% block body %}
+  <div class="lessons">
+    <div class="heading">Lessons</div>
+    {% for lecture in course.lectures %}
+      <div class="item">{{ lecture.lectureTitle }}</div>
+    {% endfor %}
+    <div class="item add">+ Add Lesson</div>
+  </div>
 {% endblock %}

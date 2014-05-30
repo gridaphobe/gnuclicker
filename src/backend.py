@@ -348,9 +348,18 @@ class AddQuestionApi(Resource):
     super(AddQuestionApi, self).__init__()
 
   def get(self, courseId):
+    course = Course.query.get(courseId)
+    if course == None:
+      return error(EBADCOURSEID, courseId)
+
+    courses = Course.query.all()
+
     args = self.getReqparse.parse_args()
     lectureId = getArg(args, "lectureId")
-    return {'template' : 'RAAARGH.html'}
+    return {'extra': {'course': course,
+                      'courses': courses,
+                      'lectures': course.lectures},
+            'template' : 'instructor/add.html'}
 
   def post(self, courseId):
     '''
