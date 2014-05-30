@@ -420,7 +420,7 @@ class AddQuestionApi(Resource):
       ('correctChoices', [('choiceId', 'choiceValid', 'choiceStr')]), ))
 
 api.add_resource(UserApi, '/courses/<string:courseId>/addQuestion',
-  endpoint='addQuestion')
+  endpoint='add_question')
 
 class EditQuestionApi(Resource):
   def __init__(self):
