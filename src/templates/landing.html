@@ -1,0 +1,22 @@
+{% extends "page.html" %}
+
+{% import "macros.html" as macros %}
+
+{% set courses = extra.courses %}
+
+{% block title %}
+  Home
+{% endblock title %}
+
+{% block nav_items %}
+  {{ macros.course_list(courses) }}
+{% endblock nav_items %}
+
+{% block body %}
+  <div class="questions">
+    <div class="heading">Courses</div>
+    {% for course in courses %}
+      <a class="item" href="/courses/{{ course.courseId }}/questions">{{ course.courseTitle }}</a>
+    {% endfor %}
+  </div>
+{% endblock body %}
