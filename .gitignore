@@ -2,6 +2,9 @@
 __pycache__/
 *.py[cod]
 
+# Danny's Editor
+.idea*
+
 # C extensions
 *.so
 
