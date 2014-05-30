@@ -4,6 +4,7 @@ __pycache__/
 
 # Danny's Editor
 .idea*
+*~
 
 # C extensions
 *.so
