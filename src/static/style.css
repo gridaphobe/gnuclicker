@@ -257,6 +257,12 @@ ul.dropdown.show {
     padding: 0 20px;
   }
 
+  .lessons > .item.sel {
+    background-color: #b4bffc;
+    background-image: linear-gradient(#f2f5ff, #b4bffc);
+    background-repeat: repeat-x;
+  }
+
   .lessons > .item.add {
     background-color: #a0e894;
     background-image: linear-gradient(#eaffd8, #a0e894);
