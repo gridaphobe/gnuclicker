@@ -54,6 +54,9 @@ class User(db.Model):
     backref='students')
   instructs = db.relationship('Course', backref='instructor')
 
+  def isEnrolledInCourse(self, course):
+    return True if course in self.enrolledIn else False
+
   def is_authenticated(self):
     return True
 
