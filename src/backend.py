@@ -806,4 +806,4 @@ api.add_resource(GradesApi, '/courses/<string:courseId>/grades',
   endpoint='grades')
 
 if __name__ == '__main__':
-    app.run()
+    app.run(port=config.PORT)
