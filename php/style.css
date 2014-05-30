@@ -126,13 +126,19 @@ input[type=password]:focus {
     .nav > * > .item > .dropdown {
       position: absolute;
       top: 100%;
-      left: 0;
       margin: 0;
     }
 
-    .nav > * > .dropdown {
-      clear: right;
-      float: right;
+    .nav > .desktop > .item > .dropdown {
+      left: 0;
+    }
+
+    .nav > .mobile > .item > .dropdown {
+      right: 0;
+    }
+
+    .nav > .mobile > .dropdown-expand {
+      position: relative;
     }
 
   .nav > * > .item.sel {
@@ -175,6 +181,8 @@ ul.dropdown {
   border: 1px solid rgba(0, 0, 0, 0.15);
   background-color: #fff;
   margin: 0;
+  position: absolute;
+  top: 0;
 }
 
 ul.dropdown.show {

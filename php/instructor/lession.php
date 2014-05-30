@@ -10,7 +10,7 @@ $page = str_replace("%sel-class%", "sel", $page);
 
 /* class list */
 $page = str_replace("%class-cur%", "CSE 12", $page);
-$arr = array("CSE 12", "CSE 100");
+$arr = array("CSE 12", "CSE 100 Super Long Name");
 foreach($arr as $class) {
   $item = file_get_contents("$root/template/class-item.html");
   $item = str_replace("%class-id%", "lession.php", $item);
