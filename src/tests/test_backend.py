@@ -9,19 +9,23 @@ from os.path import *
 sys.path.insert(0, join(dirname(realpath(__file__)), pardir))
 
 from config import basedir
-from backend import app
+from backend import app, objectify
 from Model import db, User
 from db_dummy_populate import * 
 from json import dumps
 from flask import jsonify
 from error import *
+from datetime import datetime
 
-def jsonifyTime(t):     return t.strftime("%a, %d %b %Y %H:%M:%S GMT")
+def jsonifyTime(t): return t.strftime("%a, %d %b %Y %H:%M:%S GMT")
 
 #
 # Equal Modulo Order
 #
 def equalModuloOrder(obj, template):
+    if (isinstance(template, datetime)):
+      template = jsonifyTime(template)
+
     if isinstance(template, list):
         if (not isinstance(obj, list) or len(obj) != len(template)):
             return False
@@ -167,7 +171,7 @@ class TestCase(unittest.TestCase):
         self.assertJSON("/courses/" + vals.course1.courseId + "/lectures", [])
         self.assertJSON("/courses/" + vals.course2.courseId + "/lectures", [\
             { "courseId" : vals.course2.courseId, \
-              "date"     : jsonifyTime(vals.lecture1.date), \
+              "date"     : vals.lecture1.date, \
               "lectureId": vals.lecture1.lectureId, \
               "lectureTitle" : vals.lecture1.lectureTitle
             }])
@@ -224,7 +228,8 @@ class TestCase(unittest.TestCase):
             return { 'questionId': m.questionId, 'title': m.title, \
                 'tags': list(map(lambda t: \
                     { 'tagId': t.tagId, 'tagText': t.tagText }, m.tags)), \
-                'questionBody': m.questionBody, 'lectureId': m.lectureId }
+                'questionBody': m.questionBody, 'lectureId': m.lectureId, \
+                'activeRound': m.activeRound }
 
         self.assertJSON("/courses/" + vals.course3.courseId + "/questions", \
             [ q(vals.question2), q(vals.question3), q(vals.question4),\
@@ -497,16 +502,163 @@ class TestCase(unittest.TestCase):
 
     def test_RoundStartApi(self):
         vals = dbPopulateDummyValues(db)
+        # Bad courseId or questionId
+        self.assertErrorPost(\
+          '/courses/BADVAL/question/BADID/start', EBADCOURSEID,
+          'BADVAL')
+
+        self.assertErrorPost('/courses/' + vals.course2.courseId + \
+          '/question/BADID/start', EBADQUESTIONID, 'BADID')
+
+        self.assertErrorPost('/courses/' + vals.course2.courseId + \
+          '/question/' + vals.question4.questionId + '/start', \
+          EQUESTIONMISMATCH, vals.question4.questionId, vals.course2.courseId)
+
+        # Question already has active round
+        self.assertErrorPost('/courses/' + vals.course3.courseId + \
+          '/question/' + vals.question5.questionId + '/start', \
+          EQUESTIONACTIVE, vals.question5.questionId)
+
+        # Valid start round
+        r = self.postJSON('/courses/' + vals.course3.courseId + \
+          '/question/' + vals.question4.questionId + '/start')
+
+        assert r['questionId'] == vals.question4.questionId
+        assert r['responses'] == []
 
     def test_RoundEndApi(self):
         vals = dbPopulateDummyValues(db)
+        # Bad courseId or questionId
+        self.assertErrorPost('/courses/BADVAL/question/BADID/end', EBADCOURSEID,
+          'BADVAL')
 
-    def test_LecturesApi(self):
-        vals = dbPopulateDummyValues(db)
+        self.assertErrorPost('/courses/%s/question/%s/end' % \
+          (vals.course2.courseId, 'BADID'), EBADQUESTIONID, 'BADID')
 
-    def test_LecturesDetailsApi(self):
+        self.assertErrorPost('/courses/%s/question/%s/end' % \
+          (vals.course2.courseId, vals.question4.questionId), \
+          EQUESTIONMISMATCH, vals.question4.questionId, vals.course2.courseId)
+
+        # No active round for question
+        self.assertErrorPost('/courses/%s/question/%s/end' % \
+          (vals.course3.courseId, vals.question4.questionId),
+          ENOACTIVEROUND, vals.question4.questionId)
+
+        # Successfull round end
+        q = self.getJSON('/courses/%s/questions?questionId=%s' % \
+          (vals.course3.courseId, vals.question5.questionId))[0]
+
+        assert q['activeRound'] != ''
+
+        r = self.postJSON('/courses/%s/question/%s/end' % \
+          (vals.course3.courseId, vals.question5.questionId))
+
+        assert r['questionId'] == vals.question5.questionId
+
+        q = self.getJSON('/courses/%s/questions?questionId=%s' % \
+          (vals.course3.courseId, vals.question5.questionId))[0]
+
+        assert q['activeRound'] == ''
+
+    def test_LecturesApi_get(self):
         vals = dbPopulateDummyValues(db)
+        # Bad courseId or questionId
+        lectDesc = [('lectureId', 'courseId', 'lectureTitle', 'date')]
+
+        self.assertErrorGet('/courses/BADVAL/lectures', EBADCOURSEID, 'BADVAL')
+        self.assertJSON('/courses/%s/lectures' % vals.course2.courseId,
+          objectify(vals.course2.lectures, lectDesc))
+
+    def test_LecturesApi_post(self):
+        vals = dbPopulateDummyValues(db)
+        lectDesc = [('lectureId', 'courseId', 'lectureTitle', 'date')]
+        cId = vals.course2.courseId
+        # Bad courseId
+
+        self.assertErrorPost('/courses/BADVAL/lectures?date=1&title=', \
+          EBADCOURSEID, 'BADVAL')
+
+
+        self.assertErrorPost('/courses/%s/lectures' % cId, \
+          EMISSINGARG, 'title')
+
+        self.assertErrorPost('/courses/%s/lectures?title=' % cId, \
+          EMISSINGARG, 'date')
+
+        self.assertErrorPost('/courses/%s/lectures?title=&date=' % cId, \
+          EBADINT, '')
         
+        oldLects = self.getJSON('/courses/%s/lectures' % vals.course2.courseId)
+
+        l = self.postJSON('/courses/%s/lectures?title=FOO&date=1' % cId)
+
+        newLects = self.getJSON('/courses/%s/lectures' % vals.course2.courseId)
+
+        assert len(newLects) == 1 + len(oldLects)
+        assert l in newLects and l not in oldLects
+
+    def test_LecturesDetailsApi_get(self):
+        vals = dbPopulateDummyValues(db)
+        lectDesc = ('lectureId', 'courseId', 'lectureTitle', 'date')
+
+        # Bad Course/Lecture Ids
+        self.assertErrorGet('/courses/BADVAL/lectures/BADID', EBADCOURSEID, \
+          'BADVAL')
+        self.assertErrorGet('/courses/%s/lectures/BADID' % \
+          vals.course2.courseId, EBADLECTUREID, 'BADID')
+        self.assertErrorGet('/courses/%s/lectures/%s' % \
+            (vals.course1.courseId, vals.lecture3.lectureId), ELECTUREMISMATCH,\
+            vals.lecture3.lectureId, vals.course1.courseId)
+
+        # Successfull get
+        self.assertJSON('/courses/%s/lectures/%s' % \
+            (vals.course2.courseId, vals.course2.lectures[0].lectureId),
+            objectify(vals.course2.lectures[0], lectDesc))
+
+    def test_LecturesDetailsApi_post(self):
+        vals = dbPopulateDummyValues(db)
+        lectDesc = ('lectureId', 'courseId', 'lectureTitle', 'date')
+
+        # Bad Course/Lecture Ids
+        self.assertErrorPut('/courses/BADVAL/lectures/BADID', EBADCOURSEID, \
+          'BADVAL')
+        self.assertErrorPut('/courses/%s/lectures/BADID' % \
+          vals.course2.courseId, EBADLECTUREID, 'BADID')
+        self.assertErrorPut('/courses/%s/lectures/%s' % \
+            (vals.course1.courseId, vals.lecture3.lectureId), ELECTUREMISMATCH,\
+            vals.lecture3.lectureId, vals.course1.courseId)
+
+        # Update without changing anything
+        oldL = self.getJSON('/courses/%s/lectures/%s' % \
+            (vals.course2.courseId, vals.course2.lectures[0].lectureId))
+
+        l = self.putJSON('/courses/%s/lectures/%s' % \
+            (vals.course2.courseId, vals.course2.lectures[0].lectureId))
+
+        assert l == oldL
+        oldL = l
+
+        # Update title
+        l = self.putJSON('/courses/%s/lectures/%s?title=NEW' % \
+            (vals.course2.courseId, vals.course2.lectures[0].lectureId))
+        l1 = self.getJSON('/courses/%s/lectures/%s' % \
+            (vals.course2.courseId, vals.course2.lectures[0].lectureId))
+
+        assert l == l1
+        assert l != oldL
+        assert l['lectureTitle'] == 'NEW'
+        oldL = l
+
+        # Update date
+        l = self.putJSON('/courses/%s/lectures/%s?date=42' % \
+            (vals.course2.courseId, vals.course2.lectures[0].lectureId))
+        l1 = self.getJSON('/courses/%s/lectures/%s' % \
+            (vals.course2.courseId, vals.course2.lectures[0].lectureId))
+
+        assert l == l1
+        assert l != oldL
+        assert l['date'] != oldL['date']
+        assert l['date'] == jsonifyTime(datetime.fromtimestamp(42))
 
 if __name__ == '__main__':
     unittest.main()

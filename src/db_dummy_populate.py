@@ -15,13 +15,13 @@ def dbPopulateDummyValues(db):
     user3Id = uuid.uuid4()
     user4Id = uuid.uuid4()
 
-    user1 = User(userId=str(user1Id), universityId="A12345678", \
+    user1 = User(userId=str(user1Id), universityId="jpesci", \
         name="Joe Pesci")
-    user2 = User(userId=str(user2Id), universityId="B12345678", \
+    user2 = User(userId=str(user2Id), universityId="jbiden", \
         name="Joe Biden")
-    user3 = User(userId=str(user3Id), universityId="C12345678", \
+    user3 = User(userId=str(user3Id), universityId="jstalin", \
         name="Joe Stalin")
-    user4 = User(userId=str(user4Id), universityId="C12345679", \
+    user4 = User(userId=str(user4Id), universityId="jbox", \
         name="Joe Box")
 
     # Add users to db session.

@@ -34,10 +34,6 @@ class Tag(db.Model):
   lectures = db.relationship('Lecture', secondary=lectureTags,
     backref='tags')
 
-  def __iter__(self):
-    yield ('tagId', self.tagId)
-    yield ('tagText', self.tagText)
-
 class User(db.Model):
   '''
   Describes a user in the system. A user may either be a teacher or a student in
@@ -52,18 +48,23 @@ class User(db.Model):
   instructs : courses that the User instructs.
   '''
   userId = db.Column(db.String, primary_key = True)
-  universityId = db.Column(db.String)
+  universityId = db.Column(db.String, unique = True, nullable = False)
   name = db.Column(db.String)
   enrolledIn = db.relationship('Course', secondary=enrollments,
     backref='students')
   instructs = db.relationship('Course', backref='instructor')
 
-  def __iter__(self):
-    yield ('userId', self.userId)
-    yield ('universityId', self.universityId)
-    yield ('name', self.name)
-    yield ('enrolledIn', [course.courseId for course in self.enrolledIn])
-    yield ('instructs', [course.courseId for course in self.instructs])
+  def is_authenticated(self):
+    return True
+
+  def is_active(self):
+    return True
+
+  def is_anonymous(self):
+    return False
+
+  def get_id(self):
+    return unicode(self.userId)
 
 class Course(db.Model):
   '''
@@ -82,14 +83,6 @@ class Course(db.Model):
   instructorId = db.Column(db.String, db.ForeignKey('user.userId'))
   lectures = db.relationship('Lecture', backref='course')
 
-  def __iter__(self):
-    yield ('courseId', self.courseId)
-    yield ('courseTitle', self.courseTitle)
-    yield ('instructorId', self.instructorId)
-    yield ('lectures', [str(lecture.lectureId) for lecture in self.lectures])
-    # This next line won't work unless we implement a custom json encoder.
-    #yield ('lectures', self.lectures)
-
 class Lecture(db.Model):
   '''
   A lecture is associated with a course. It contains multiple questions.
@@ -105,12 +98,6 @@ class Lecture(db.Model):
   lectureTitle = db.Column(db.String)
   questions = db.relationship('Question', backref='lecture')
   date = db.Column(db.DateTime)
-
-  def __iter__(self):
-    yield ('lectureId', self.lectureId)
-    yield ('courseId', self.courseId)
-    yield ('lectureTitle', self.lectureTitle)
-    yield ('questions', [str(question.questionId) for question in self.questions])
 
 class Question(db.Model):
   '''
@@ -143,15 +130,10 @@ class Question(db.Model):
     else:
       return super(Question, self).__getattr__(self, name)
 
-  def __iter__(self):
-    yield ('questionId', self.questionId)
-    yield ('lectureId', self.lectureId)
-    yield ('title', self.title)
-    yield ('questionBody', self.questionBody)
-    yield ('choices', [str(choice.choiceId) for choice in self.choices])
-    yield ('correctChoices', [str(choice.choiceId) for choice in self.choices
-      if choice.choiceValid != 0])
-    yield ('rounds', [str(answerRound.roundId) for answerRound in self.rounds])
+  def getActiveRound(self):
+    if not self.activeRound:
+      return None
+    return Round.query.get(self.activeRound)
 
 class Choice(db.Model):
   '''
@@ -166,12 +148,6 @@ class Choice(db.Model):
   questionId = db.Column(db.String, db.ForeignKey('question.questionId'))
   choiceValid = db.Column(db.Integer)
   choiceStr = db.Column(db.String)
-
-  def __iter__(self):
-    yield ('choiceId', self.choiceId)
-    yield ('questionId', self.questionId)
-    yield ('choiceValid', self.choiceValid)
-    yield ('choiceStr', self.choiceStr)
 
 class Round(db.Model):
   '''
@@ -190,14 +166,8 @@ class Round(db.Model):
   startTime = db.Column(db.Integer)
   endTime = db.Column(db.Integer)
   responses = db.relationship('Response', backref='roundFor')
-
-  def __iter__(self):
-    yield ('roundId', self.roundId)
-    yield ('questionId', self.questionId)
-    yield ('startTime', self.startTime)
-    yield ('endTime', self.endTime)
-    yield ('response', [str(response.responseId) for response in
-      self.responses])
+  def choicesOf(self, choiceId):
+    return filter(lambda c: c.choiceId == choiceId, self.responses)
 
 class Response(db.Model):
   '''
@@ -214,10 +184,3 @@ class Response(db.Model):
   roundId = db.Column(db.String, db.ForeignKey('round.roundId'))
   studentId = db.Column(db.String, db.ForeignKey('user.userId'))
   choiceId = db.Column(db.String, db.ForeignKey('choice.choiceId'))
-
-  def __iter__(self):
-    yield ('responseId', self.responseId)
-    yield ('roundId', self.roundId)
-    yield ('studentId', self.studentId)
-    yield ('choiceId', self.choiceId)
-

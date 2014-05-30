@@ -1,0 +1,15 @@
+{% macro course_list(courses=[]) %}
+  <div class="desktop item class %sel-class%">
+    <a class="dropdown-expand" href="#" onclick="return false;">Courses &#x25be;</a>
+    <ul class="dropdown">
+      {% for course in courses %}
+        <li><a href="/courses/{{ course.courseId }}/questions">{{ course.courseTitle }}</a></li>
+      {% endfor %}
+    </ul>
+  </div>
+  <div class="mobile">
+    {% for course in courses %}
+      <li><a href="/courses/{{ course.courseId }}/questions">{{ course.courseTitle }}</a></li>
+    {% endfor %}
+  </div>
+{% endmacro %}

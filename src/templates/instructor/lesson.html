@@ -1,0 +1,55 @@
+{% extends "page.html" %}
+
+{% import "macros.html" as macros %}
+
+{% set questions = extra.questions %}
+{% set course  = extra.course %}
+{% set courses = extra.courses %}
+
+{% block javascript %}
+  <script type="text/javascript" src="/static/js/lesson.js"></script>
+{% endblock %}
+  
+{% block nav_items %}
+  {{ macros.course_list(courses) }}
+{% endblock %}
+
+{% block body %}
+  <div class="lessons">
+    <div class="heading">Lessons</div>
+    {% for lecture in course.lectures %}
+      <div class="item">{{ lecture.lectureTitle }}</div>
+    {% endfor %}
+    <div class="item add">+ Add Lesson</div>
+  </div>
+  <div class="questions">
+    <div class="heading">questions</div>
+    {% for question in questions %}
+      {% if question.rounds|count > 0 %}
+        {% set round = question.rounds[0] %}
+        {% set responses = round.responses|count %}
+      {% else %}
+        {% set responses = None %}
+      {% endif %}
+      <a class="item" href="/courses/{{ course.courseId }}/questions?questionId={{ question.questionId }}">{{ question.title }}</a>
+      <div class="content hide">
+        <div class="text">{{ question.questionBody }}</div>
+        {% for choice in question.choices %}
+          {% if responses %}
+            {% set percent = round.choicesOf(choice.choiceId)|count / responses * 100 %}
+          {% else %}
+            {% set percent = 0 %}
+          {% endif %}
+          <div class="answer{% if choice.choiceValid == 1 %} correct{% endif %}">
+            <div class="text">{{ choice.choiceStr }}</div>
+            <div class="result" style="width: {{ percent }}%;">{{ percent }}%</div>
+          </div>
+        {% endfor %}
+        <div class="buttons">
+          <button>Open Poll</button> <button>Clear Results</button>
+        </div>
+      </div>
+    {% endfor %}
+    <a class="item add">+ add question</a>
+  </div>
+{% endblock %}

@@ -1,0 +1,9 @@
+{% extends "page.html" %}
+
+{% import "macros.html" as macros %}
+
+{% set courses = extra.courses %}
+
+{% block nav_items %}
+  {{ macros.course_list(courses) }}
+{% endblock %}
