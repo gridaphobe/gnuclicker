@@ -1,0 +1,63 @@
+{% extends "page.html" %}
+
+{% import "macros.html" as macros %}
+
+{% set question = extra.question %}
+{% set course   = extra.course %}
+{% set round    = question.getActiveRound() %}
+
+{% block title %}
+  Question
+{% endblock title %}
+
+{% block javascript %}
+  <script type="text/javascript" src="/static/js/student.js"></script>
+  <script type="text/javascript">
+    var courseId   = "{{ course.courseId }}";
+    var questionId = "{{ question.questionId }}";
+  </script>
+{% endblock %}
+
+{% block nav_items %}
+  {{ macros.course_list(extra.courses,course) }}
+{% endblock %}
+
+{% block body %}
+  <div class="question">
+    <div class="header">
+      <h3>{{ question.title }}<span class="course">{{ course.courseTitle }}</span></h3>
+    </div>
+    <div class="body">
+      <h4 class="prompt">{{ question.questionBody }}</h4>
+      {% set ids = cycler('a','b','c','d','e') %}
+      {% for choice in question.choices %}
+        {% if not loop.index == 0 %}
+          <div class="space"></div>
+        {% endif %}
+        <div class="answer student-response" id="answer-{{ids.current|capitalize}}-{{ choice.choiceId }}">
+          {{ ids.next()|capitalize }}. {{ choice.choiceStr }}
+        </div>
+      {% endfor %}
+    </div>
+    <div class="footer">
+      <div id="submitting" class="hidden">
+        <img id="flower-gear" src="http://www.millan.net/anims/gifs/snurra.gif"/>
+      </div>
+      <div id="submitted" class="hidden">
+        <img id="check-mark" src="/static/check-mark.png"/>
+          Your answer "<span id="submitted-answer"></span>" has been successfully submitted.
+      </div>
+      <div id="submitted-error" class="hidden">
+        <img id="x-mark" src="/static/warning.png"/>
+        There was an error submitting your answer, please try again!
+      </div>
+      <div class="timer">
+        {% if round %}
+          Timer: <span id="timer">{{ round.startTime - extra.currentTime }}</span> sec
+        {% else %}
+          No active round
+        {% endif %}
+      </div>
+    </div>
+  </div>
+{% endblock %}

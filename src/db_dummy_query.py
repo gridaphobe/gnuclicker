@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 from __init__ import db
 from Model import *
@@ -23,12 +23,17 @@ for course in courses:
   print("Lectures:")
   for lecture in course.lectures:
     print("\tLecture Title: %s" % (lecture.lectureTitle))
+    print("\tLecture Tags: %s" % (" ".join([tag.tagText for tag in
+      lecture.tags])))
     for question in lecture.questions:
-      print("\tQuestion: %s: %s" % (question.title, question.questionBody))
+      print("\tQuestion: %s (%s): %s" % (question.title, question.questionId,
+        question.questionBody))
+      print("\tQuestion Tags: %s" % (" ".join([tag.tagText for tag in
+        question.tags])))
       allChoices = "[ %s ]" % (" ".join([choice.choiceStr for choice in
         question.choices]))
       correctChoices = "[ %s ]" % (" ".join([choice.choiceStr for choice in
-        question.correctChoices]))
+        question.choices if choice.choiceValid != 0]))
       print("\tChoices: %s Correct: %s" % (allChoices, correctChoices))
       for answerRound in question.rounds:
         print("\tResults for round start: %d finish: %d" % (answerRound.startTime,

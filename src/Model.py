@@ -12,12 +12,33 @@ enrollments = db.Table('enrollments',
   db.Column('course_id', db.String, db.ForeignKey('course.courseId'))
 )
 
+questionTags = db.Table('questionTags',
+  db.Column('question_id', db.String, db.ForeignKey('question.questionId')),
+  db.Column('tag_id', db.String, db.ForeignKey('tag.tagId'))
+)
+
+lectureTags = db.Table('lectureTags',
+  db.Column('lecture_id', db.String, db.ForeignKey('lecture.lectureId')),
+  db.Column('tag_id', db.String, db.ForeignKey('tag.tagId'))
+)
+
+class Tag(db.Model):
+  '''
+  Semantic tag. Associated with many questions and lectures, each of which can
+  have many tags.
+  '''
+  tagId = db.Column(db.String, primary_key = True)
+  tagText = db.Column(db.String)
+  questions = db.relationship('Question', secondary=questionTags,
+    backref='tags')
+  lectures = db.relationship('Lecture', secondary=lectureTags,
+    backref='tags')
+
 class User(db.Model):
   '''
   Describes a user in the system. A user may either be a teacher or a student in
   relation to a course; for example, teach one course, and be enrolled in two.
   However, a user cannot be both a teacher and a student for the same course.
-
 
   Fields:
   userId: UUID Primary Key.
@@ -27,11 +48,26 @@ class User(db.Model):
   instructs : courses that the User instructs.
   '''
   userId = db.Column(db.String, primary_key = True)
-  universityId = db.Column(db.String)
+  universityId = db.Column(db.String, unique = True, nullable = False)
   name = db.Column(db.String)
   enrolledIn = db.relationship('Course', secondary=enrollments,
     backref='students')
   instructs = db.relationship('Course', backref='instructor')
+
+  def isEnrolledInCourse(self, course):
+    return True if course in self.enrolledIn else False
+
+  def is_authenticated(self):
+    return True
+
+  def is_active(self):
+    return True
+
+  def is_anonymous(self):
+    return False
+
+  def get_id(self):
+    return unicode(self.userId)
 
 class Course(db.Model):
   '''
@@ -57,12 +93,14 @@ class Lecture(db.Model):
   Fields:
   lectureId : UUID Primary Key.
   courseId : ID for course of lecture.
+  lectureTitle: Human readable title for lecture.
   questions : A lecture has many questions. A question has one lecture.
   '''
   lectureId = db.Column(db.String, primary_key = True)
   courseId = db.Column(db.String, db.ForeignKey('course.courseId'))
   lectureTitle = db.Column(db.String)
   questions = db.relationship('Question', backref='lecture')
+  date = db.Column(db.DateTime)
 
 class Question(db.Model):
   '''
@@ -84,8 +122,21 @@ class Question(db.Model):
   title = db.Column(db.String)
   questionBody = db.Column(db.String)
   choices = db.relationship('Choice', backref='question')
-  correctChoices = db.relationship('Choice')
   rounds = db.relationship('Round', backref='question')
+  activeRound = db.Column(db.String)
+
+  # TODO(dimo): UGH, ugly hack to support correctChoices field given the
+  # objectify model for extracting return data from db objects
+  def __getattr__(self, name):
+    if (name == 'correctChoices'):
+      return [choice for choice in self.choices if choice.choiceValid != 0]
+    else:
+      return super(Question, self).__getattr__(self, name)
+
+  def getActiveRound(self):
+    if not self.activeRound:
+      return None
+    return Round.query.get(self.activeRound)
 
 class Choice(db.Model):
   '''
@@ -98,6 +149,7 @@ class Choice(db.Model):
   '''
   choiceId = db.Column(db.String, primary_key = True)
   questionId = db.Column(db.String, db.ForeignKey('question.questionId'))
+  choiceValid = db.Column(db.Integer)
   choiceStr = db.Column(db.String)
 
 class Round(db.Model):
@@ -117,6 +169,8 @@ class Round(db.Model):
   startTime = db.Column(db.Integer)
   endTime = db.Column(db.Integer)
   responses = db.relationship('Response', backref='roundFor')
+  def choicesOf(self, choiceId):
+    return filter(lambda c: c.choiceId == choiceId, self.responses)
 
 class Response(db.Model):
   '''
@@ -133,4 +187,3 @@ class Response(db.Model):
   roundId = db.Column(db.String, db.ForeignKey('round.roundId'))
   studentId = db.Column(db.String, db.ForeignKey('user.userId'))
   choiceId = db.Column(db.String, db.ForeignKey('choice.choiceId'))
-

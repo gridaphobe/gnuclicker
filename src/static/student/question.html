@@ -4,10 +4,11 @@
   <meta charset="utf-8">
   <link rel="stylesheet" type="text/css" href="../style.css" />
   <title>Home</title>
+  <script type="text/javascript" src="../js/jquery-1.11.1.min.js"></script>
   <script type="text/javascript" src="../js/ui.js"></script>
+  <script type="text/javascript" src="../js/student.js"></script>
 </head>
 <body>
-
 <div class="page portal">
   <div class="nav">
     <div class="item brand"><a href="../">Gnu/Clicker</a></div>
@@ -31,29 +32,33 @@
       </div>
       <div class="body">
         <h4 class="prompt">I'm inserting a new element into a queue. Where will it appear?</h4>
-        <div class="answer item" id="answer-a">
+        <div class="answer student-response" id="answer-a">
           A. Front
         </div>
         <div class="space"></div>
-        <div class="answer item" id="answer-b">
+        <div class="answer student-response" id="answer-b">
           B. Back
         </div>
         <div class="space"></div>
-        <div class="answer item" id="answer-c">
+        <div class="answer student-response" id="answer-c">
           C. Middle
         </div>
         <div class="space"></div>
-        <div class="answer item" id="answer-d">
+        <div class="answer student-response" id="answer-d">
           D. Cannot insert like this
         </div>
         <div class="space"></div>
-        <div class="answer item" id="answer-e">
+        <div class="answer student-response" id="answer-e">
           E. None of the above
         </div>
       </div>
       <div class="footer">
-        <div class="submit">
-          <button type="submit">Submit</button>
+        <div id="submitting" class="hidden">
+          <img id="flower-gear" src="http://www.millan.net/anims/gifs/snurra.gif">
+        </div>
+        <div id="submitted" class="hidden">
+          <img id="check-mark" src="/static/check-mark-3-64.png">
+          Your answer "<span id="submitted-answer"></span>" has been successfully submitted.
         </div>
         <div class="timer">
           Timer: <span id="timer">29</span> sec
