@@ -145,7 +145,7 @@ def dbPopulateDummyValues(db):
     choice5 = Choice(choiceId=str(choice5Id), question=question2,
       choiceStr="NO CHOICE", choiceValid=1)
     choice6 = Choice(choiceId=str(choice6Id), question=question5,
-      choiceStr="CHOICE IS AN ILLUSION", choiceValid=1)
+                     choiceStr="CHOICE IS AN ILLUSION (Michael)", choiceValid=1)
 
     # Add answers to session.
     db.session.add(choice1)
