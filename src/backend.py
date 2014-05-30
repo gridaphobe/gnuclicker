@@ -82,6 +82,7 @@ def json(data, code, headers=None):
 
 @api.representation('text/html')
 def html(data, code, headers=None):
+  data['g'] = g
   resp = make_response(env.get_template(data['template']).render(data), code)
   resp.headers.extend(headers or {})
   return resp
@@ -157,6 +158,7 @@ class CoursesListApi(Resource):
       res = Course.query.all()
 
     return {'res': objectify(res, [("courseId", "courseTitle", "instructorId")]),
+            'extra': {'courses': res},
             'template': 'instructor/index.html'}
 
 api.add_resource(CoursesListApi, '/courses', endpoint='courses_list')
