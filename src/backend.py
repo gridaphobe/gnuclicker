@@ -279,6 +279,7 @@ class QuestionsApi(Resource):
       return {'res': objectify([question], qDesc),
               'extra': {'courses': courses,
                         'question': question,
+                        'lecture': question.lecture,
                         'course': course,
                         'currentTime': time.time()},
               'template' : 'student/question.html'}
@@ -297,6 +298,7 @@ class QuestionsApi(Resource):
       return {'res': objectify(questions, qDesc),
               'extra': {'courses': courses,
                         'course': course,
+                        'lecture': None,
                         'questions': questions,
                         'lectures': course.lectures},
               'template' : 'instructor/lesson.html'}
@@ -310,6 +312,7 @@ class QuestionsApi(Resource):
         return {'res': objectify(lecture.questions, qDesc),
                 'extra': {'courses': courses,
                           'course': course,
+                          'lecture': lecture,
                           'questions': questions,
                           'lectures': course.lectures},
                 'template' : 'instructor/lesson.html'}
@@ -323,6 +326,7 @@ class QuestionsApi(Resource):
       return {'res': objectify(questions, qDesc),
               'extra': {'courses': courses,
                         'course': course,
+                        'lecture': lecture,
                         'questions': questions,
                         'lectures': course.lectures},
               'template' : 'instructor/lesson.html'}
