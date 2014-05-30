@@ -1,7 +1,7 @@
 (function() {
   function dropdown(e) {
     var target = this;
-    var obj = this.nextSibling;
+    var obj = this.querySelector(".dropdown");
     while(obj.nodeType != 1)
       obj = obj.nextSibling;
 

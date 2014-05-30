@@ -32,6 +32,11 @@ def tryLogin(universityId, password):
   # For now, if user exists, then login was good.
   return User.query.filter(User.universityId == universityId).scalar()
 
+class RootApi(Resource):
+  def get(self):
+    return redirect('/courses')
+api.add_resource(RootApi, '/', endpoint='root')
+
 class LogoutApi(Resource):
   def handleLogout(self):
     if g.user is not None and g.user.is_authenticated():
@@ -285,6 +290,7 @@ class QuestionsApi(Resource):
       return {'res': objectify([question], qDesc),
               'extra': {'courses': courses,
                         'question': question,
+                        'lecture': question.lecture,
                         'course': course,
                         'currentTime': time.time()},
               'template' : 'student/question.html'}
@@ -308,6 +314,7 @@ class QuestionsApi(Resource):
       return {'res': objectify(questions, qDesc),
               'extra': {'courses': courses,
                         'course': course,
+                        'lecture': None,
                         'questions': questions,
                         'lectures': course.lectures},
               'template' : 'instructor/lesson.html'}
@@ -328,6 +335,7 @@ class QuestionsApi(Resource):
         return {'res': objectify(questions, qDesc),
                 'extra': {'courses': courses,
                           'course': course,
+                          'lecture': lecture,
                           'questions': questions,
                           'lectures': course.lectures},
                 'template' : 'instructor/lesson.html'}
@@ -345,6 +353,7 @@ class QuestionsApi(Resource):
       return {'res': objectify(questions, qDesc),
               'extra': {'courses': courses,
                         'course': course,
+                        'lecture': lecture,
                         'questions': questions,
                         'lectures': course.lectures},
               'template' : 'instructor/lesson.html'}
