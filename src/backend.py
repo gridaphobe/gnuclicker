@@ -1,21 +1,74 @@
 #! /usr/bin/env python
-from flask import Flask, jsonify, make_response
+from flask import Flask, jsonify, make_response, g, redirect, url_for
 from flask.ext.restful import Api, Resource, reqparse
 from flask.ext.sqlalchemy import SQLAlchemy
+from flask.ext.login import current_user, login_user, logout_user, \
+  login_required
 from jinja2 import Environment, FileSystemLoader
 import uuid
 import config
 from Model import db, User, Course, Lecture, Question, Choice, Tag, Response, \
                   Round
-from __init__ import app
+from __init__ import app, lm
 import datetime
 import time
 from copy import copy
 from common import *
 from error import *
+from forms import *
 
 api = Api(app)
 env = Environment(loader=FileSystemLoader('templates'))
+
+@app.before_request
+def before_request():
+  g.user = current_user
+
+@lm.user_loader
+def load_user(userId):
+  return User.query.get(userId)
+
+def tryLogin(universityId, password):
+  # For now, if user exists, then login was good.
+  return User.query.filter(User.universityId == universityId).scalar()
+
+class LogoutApi(Resource):
+  def handleLogout(self):
+    if g.user is not None and g.user.is_authenticated():
+      logout_user()
+    return redirect(url_for('login'))
+
+  def get(self):
+    return self.handleLogout()
+api.add_resource(LogoutApi, '/logout', endpoint='logout')
+
+class LoginApi(Resource):
+  def handleLogin(self):
+    if g.user is not None and g.user.is_authenticated():
+      print("Already logged in as user: %s (%s)" %
+        (g.user.universityId, g.user.name)
+      )
+      return redirect(url_for('courses_list'))
+    form = LoginForm()
+    if form.validate_on_submit():
+      user = tryLogin(form.universityId.data, form.password.data)
+      if user is not None:
+        print("New log in as user: %s (%s)" % (user.universityId, user.name))
+        login_user(user)
+        return redirect(url_for('courses_list'))
+      else:
+        print("Login failure.")
+    else:
+      print("Form did not validate.")
+    # Return login page.
+    return {'form' : form, 'template' : 'login.html'}
+
+  def get(self):
+    return self.handleLogin()
+
+  def post(self):
+    return self.handleLogin()
+api.add_resource(LoginApi, '/login', endpoint='login')
 
 @api.representation('application/json')
 def json(data, code, headers=None):
@@ -53,11 +106,11 @@ def objectify(o, t):
     return map(lambda x: objectify(x, t[0]), o)
   else:
     return o
-    
+
 # jsonify() seems to insist that no arrays can be used as top-level
 # json objects. To satisfy it, for now wrap everything in a top-level
 # { res: ... } object
-def myJson(o, t): 
+def myJson(o, t):
     return jsonify(res = objectify(o, t))
 
 class CoursesListApi(Resource):
@@ -71,6 +124,8 @@ class CoursesListApi(Resource):
     '''
     Return all courses matching the given student and instructor id filters.
     '''
+    print("User (%s : %s) asking for courses list." % (g.user.name,
+      g.user.universityId))
     args = self.reqparse.parse_args()
     studentId = getArg(args, "studentId")
     instructorId = getArg(args, "instructorId")
@@ -84,7 +139,7 @@ class CoursesListApi(Resource):
       instructor = User.query.get(instructorId)
       if (instructor == None):
         return error(EBADINSTRUCTORID, instructorId)
-        
+
     res = None
 
     if (studentId and instructorId):
@@ -94,7 +149,7 @@ class CoursesListApi(Resource):
       # Return any classes taken by student
       res = student.enrolledIn
     elif (instructorId):
-      # Return any classes thought by instructor 
+      # Return any classes thought by instructor
       res = instructor.instructs
     else:
       # Return all classes
@@ -221,7 +276,7 @@ class QuestionsApi(Resource):
 
     if questionId != None:
       question = Question.query.get(questionId)
-      
+
       if (question == None):
         return error(EBADQUESTIONID, questionId)
 
@@ -344,7 +399,7 @@ class QuestionsApi(Resource):
     db.session.commit()
     return myJson(question, ('questionId', 'lectureId', 'title', \
       'questionBody', \
-      ('choices', [('choiceId', 'choiceValid', 'choiceStr')]), 
+      ('choices', [('choiceId', 'choiceValid', 'choiceStr')]),
       ('correctChoices', [('choiceId', 'choiceValid', 'choiceStr')]), ))
 
 api.add_resource(QuestionsApi, '/courses/<string:courseId>/questions')
@@ -430,7 +485,7 @@ class EditQuestionApi(Resource):
     db.session.commit()
     return myJson(question, ('questionId', 'lectureId', 'title', \
       'questionBody', \
-      ('choices', [('choiceId', 'choiceValid', 'choiceStr')]), 
+      ('choices', [('choiceId', 'choiceValid', 'choiceStr')]),
       ('correctChoices', [('choiceId', 'choiceValid', 'choiceStr')]), ))
 
 
@@ -510,7 +565,7 @@ class ResponseApi(Resource):
 
     # Check if there's  an active round.
     if question.activeRound == None or question.activeRound == "":
-      return error(ENOACTIVEROUND, questionId) 
+      return error(ENOACTIVEROUND, questionId)
 
     choice = Choice.query.get(choiceId)
     if (not choice):

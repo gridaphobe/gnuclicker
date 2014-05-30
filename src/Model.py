@@ -48,11 +48,23 @@ class User(db.Model):
   instructs : courses that the User instructs.
   '''
   userId = db.Column(db.String, primary_key = True)
-  universityId = db.Column(db.String)
+  universityId = db.Column(db.String, unique = True, nullable = False)
   name = db.Column(db.String)
   enrolledIn = db.relationship('Course', secondary=enrollments,
     backref='students')
   instructs = db.relationship('Course', backref='instructor')
+
+  def is_authenticated(self):
+    return True
+
+  def is_active(self):
+    return True
+
+  def is_anonymous(self):
+    return False
+
+  def get_id(self):
+    return unicode(self.userId)
 
 class Course(db.Model):
   '''
