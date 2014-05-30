@@ -276,6 +276,17 @@ class QuestionsApi(Resource):
       if (question == None):
         return error(EBADQUESTIONID, questionId)
 
+      # Permissions checks:
+      # 1. Make sure lecture for question is a lecture for this course.
+      # 2. If we're not the instructor, and question has no rounds, return a
+      # permissions problem.
+      if question.lecture.course != course:
+        return error(EBADQUESTIONID, questionId)
+
+      if course.instructor != g.user:
+        if len(question.rounds) == 0:
+          return error(EBADQUESTIONID, questionId)
+
       return {'res': objectify([question], qDesc),
               'extra': {'courses': courses,
                         'question': question,
@@ -289,6 +300,11 @@ class QuestionsApi(Resource):
       questions = []
       for lecture in course.lectures:
         for question in lecture.questions:
+          # If we're not the instructor only show asked questions.
+          if course.instructor != g.user:
+            if len(question.rounds) == 0:
+              continue
+
           if tags is None:
             questions.append(question)
           else:
@@ -309,7 +325,14 @@ class QuestionsApi(Resource):
       if lecture.course != course:
         return error(ELECTUREMISMATCH, lectureId, courseId)
       if tags is None:
-        return {'res': objectify(lecture.questions, qDesc),
+        questions = []
+        for question in lecture.questions:
+          # If we're not the instructor only show asked questions.
+          if course.instructor != g.user:
+            if len(question.rounds) == 0:
+              continue
+            questions.append(question)
+        return {'res': objectify(questions, qDesc),
                 'extra': {'courses': courses,
                           'course': course,
                           'lecture': lecture,
@@ -319,6 +342,10 @@ class QuestionsApi(Resource):
       else:
         questions = []
         for question in lecture.questions:
+          if course.instructor != g.user:
+            # If we're not the instructor only show asked questions.
+            if len(question.rounds) == 0:
+              continue
           questionTags = set([tag.tagText for tag in question.tags])
 
           if tags <= questionTags:
@@ -352,9 +379,18 @@ class AddQuestionApi(Resource):
     super(AddQuestionApi, self).__init__()
 
   def get(self, courseId):
+    course = Course.query.get(courseId)
+    if course == None:
+      return error(EBADCOURSEID, courseId)
+
+    courses = Course.query.all()
+
     args = self.getReqparse.parse_args()
     lectureId = getArg(args, "lectureId")
-    return {'template' : 'RAAARGH.html'}
+    return {'extra': {'course': course,
+                      'courses': courses,
+                      'lectures': course.lectures},
+            'template' : 'instructor/add.html'}
 
   def post(self, courseId):
     '''
