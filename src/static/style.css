@@ -446,6 +446,17 @@ ul.dropdown.show {
       border-radius: 4px;
     }
 
+  .questions > .content > .input {
+    padding: 5px 0;
+  }
+
+    .questions > .content > .input > div {
+    }
+
+    .questions > .content > .input > input {
+      max-width: 300px;
+    }
+
   .questions > .content > .buttons {
     text-align: right;
   }
