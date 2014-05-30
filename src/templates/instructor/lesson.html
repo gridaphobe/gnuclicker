@@ -31,7 +31,7 @@
       {% else %}
         {% set responses = None %}
       {% endif %}
-      <a class="item" href="/courses/{{ course.courseId }}/questions?questionId={{ question.id }}">{{ question.title }}</a>
+      <a class="item" href="/courses/{{ course.courseId }}/questions?questionId={{ question.questionId }}">{{ question.title }}</a>
       <div class="content hide">
         <div class="text">{{ question.questionBody }}</div>
         {% for choice in question.choices %}
@@ -40,7 +40,7 @@
           {% else %}
             {% set percent = 0 %}
           {% endif %}
-          <div class="answer">
+          <div class="answer{% if choice.choiceValid == 1 %} correct{% endif %}">
             <div class="text">{{ choice.choiceStr }}</div>
             <div class="result" style="width: {{ percent }}%;">{{ percent }}%</div>
           </div>

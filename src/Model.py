@@ -130,6 +130,11 @@ class Question(db.Model):
     else:
       return super(Question, self).__getattr__(self, name)
 
+  def getActiveRound(self):
+    if not self.activeRound:
+      return None
+    return Round.query.get(self.activeRound)
+
 class Choice(db.Model):
   '''
   An answer choice is a string. It is associated with a question.

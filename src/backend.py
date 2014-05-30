@@ -284,7 +284,8 @@ class QuestionsApi(Resource):
       return {'res': objectify([question], qDesc),
               'extra': {'courses': courses,
                         'question': question,
-                        'course': course},
+                        'course': course,
+                        'currentTime': time.time()},
               'template' : 'student/question.html'}
 
     if lectureId is None:

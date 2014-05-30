@@ -1,16 +1,16 @@
 {% extends "page.html" %}
 
 {% import "macros.html" as macros %}
+
 {% set question = extra.question %}
 {% set course   = extra.course %}
-
+{% set round    = question.getActiveRound() %}
 
 {% block javascript %}
-  <script type="text/javascript" src="/static/js/jquery-1.11.1.min.js"></script>
   <script type="text/javascript" src="/static/js/student.js"></script>
   <script type="text/javascript">
-    var courseId   = "{{ course.courseId }}"
-    var questionId = "{{ question.questionId }}"
+    var courseId   = "{{ course.courseId }}";
+    var questionId = "{{ question.questionId }}";
   </script>
 {% endblock %}
 
@@ -37,14 +37,22 @@
     </div>
     <div class="footer">
       <div id="submitting" class="hidden">
-        <img id="flower-gear" src="http://www.millan.net/anims/gifs/snurra.gif">
+        <img id="flower-gear" src="http://www.millan.net/anims/gifs/snurra.gif"/>
       </div>
       <div id="submitted" class="hidden">
-        <img id="check-mark" src="/static/check-mark-3-64.png">
+        <img id="check-mark" src="/static/check-mark.png"/>
           Your answer "<span id="submitted-answer"></span>" has been successfully submitted.
       </div>
+      <div id="submitted-error" class="hidden">
+        <img id="x-mark" src="/static/warning.png"/>
+        There was an error submitting your answer, please try again!
+      </div>
       <div class="timer">
-        Timer: <span id="timer">29</span> sec
+        {% if round %}
+          Timer: <span id="timer">{{ round.startTime - extra.currentTime }}</span> sec
+        {% else %}
+          No active round
+        {% endif %}
       </div>
     </div>
   </div>
