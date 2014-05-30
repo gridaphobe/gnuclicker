@@ -19,8 +19,8 @@
           {% if not g.user.is_authenticated() %}
             <div class="item home right"><a href="/login">Login</a></div>
           {% else %}
-            <div class="item home right">
-              <a class="dropdown-expand" href="#" onclick="return false;">
+            <div class="item home right dropdown-expand">
+              <a href="#" onclick="return false;">
                 {{ g.user.name }} &#x25be;
               </a>
               <ul class="dropdown">
@@ -40,16 +40,16 @@
               {% endif %}
               &#x25be;
             </a>
+            <ul class="dropdown">
+              <li><a href="/instructor/">Home</a></li>
+              {{ self.nav_items() }}
+              {% if g.user.is_authenticated() %}
+                <li><a href="/logout">Logout</a></li>
+              {% else %}
+                <li><a href="/login">Login</a></li>
+              {% endif %}
+            </ul>
           </div>
-          <ul class="dropdown">
-            <li><a href="/instructor/">Home</a></li>
-            {{ self.nav_items() }}
-            {% if g.user.is_authenticated() %}
-              <li><a href="/logout">Logout</a></li>
-            {% else %}
-              <li><a href="/login">Login</a></li>
-            {% endif %}
-          </ul>
         </div>
       </div>
       <div id="body">
