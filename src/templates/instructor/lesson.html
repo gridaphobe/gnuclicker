@@ -29,7 +29,7 @@
     <div class="item add">+ Add Lesson</div>
   </div>
   <div class="questions">
-    <div class="heading">questions</div>
+    <div class="heading">Questions</div>
     {% for question in questions %}
       {% if question.rounds|count > 0 %}
         {% set round = question.rounds[0] %}
@@ -56,6 +56,6 @@
         </div>
       </div>
     {% endfor %}
-    <a class="item add">+ add question</a>
+    <a class="item add" href="addQuestion">+ Add Question</a>
   </div>
 {% endblock %}
