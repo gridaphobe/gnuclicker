@@ -159,7 +159,7 @@ class CoursesListApi(Resource):
 
     return {'res': objectify(res, [("courseId", "courseTitle", "instructorId")]),
             'extra': {'courses': res},
-            'template': 'instructor/index.html'}
+            'template': 'landing.html'}
 
 api.add_resource(CoursesListApi, '/courses', endpoint='courses_list')
 
