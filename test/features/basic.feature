@@ -12,12 +12,3 @@ Feature: Login.
       And click submit
       Then the user receives an error
 
-
-
-Feature: Navigating classes and questions.
-
-    Scenario: Navigating classes.
-
-
-
-    Scenario: Navigating questions.
