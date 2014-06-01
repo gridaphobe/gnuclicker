@@ -250,6 +250,21 @@ class QuestionsApi(Resource):
     self.getReqparse.add_argument('questionId', type=str)
     super(QuestionsApi, self).__init__()
 
+  def sortByTime(self, questions):
+    # Questions with no rounds are at top of list.
+    # Questions with rounds are sorted by round start time.
+    unaskedQuestions = [question for question in questions
+      if len(question.rounds) == 0]
+    askedQuestions = [question for question in questions
+      if len(question.rounds) > 0]
+    def keyFn(question):
+      mostRecentRound = question.rounds[-1]
+      return mostRecentRound.startTime * -1
+    askedQuestions.sort(key=keyFn)
+    unaskedQuestions.extend(askedQuestions)
+    ret = unaskedQuestions
+    return ret
+
   def get(self, courseId):
     '''
     Return all questions, matching the lecture id if provided, and all of the
@@ -311,6 +326,7 @@ class QuestionsApi(Resource):
             questionTags = set([tag.tagText for tag in question.tags])
             if tags <= questionTags:
               questions.append(question)
+      questions = self.sortByTime(questions)
       return {'res': objectify(questions, qDesc),
               'extra': {'courses': courses,
                         'course': course,
@@ -332,6 +348,7 @@ class QuestionsApi(Resource):
             if len(question.rounds) == 0:
               continue
             questions.append(question)
+        questions = self.sortByTime(questions)
         return {'res': objectify(questions, qDesc),
                 'extra': {'courses': courses,
                           'course': course,
@@ -350,6 +367,7 @@ class QuestionsApi(Resource):
 
           if tags <= questionTags:
             questions.append(question)
+      questions = self.sortByTime(questions)
       return {'res': objectify(questions, qDesc),
               'extra': {'courses': courses,
                         'course': course,

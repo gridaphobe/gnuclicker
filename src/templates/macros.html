@@ -19,7 +19,7 @@
     <div class="heading">Lectures</div>
     {% for lecture in lectures %}
       <div class="item{% if cur_lecture.lectureId == lecture.lectureId %} sel{% endif %}">
-        <a href="?lectureId={{lecture.lectureId}}">{{ lecture.lectureTitle }}</a>
+        <a href="?lectureId={{ lecture.lectureId }}">{{ lecture.lectureTitle }}</a>
       </div>
     {% endfor %}
     <div class="item add">+ Add Lecture</div>
