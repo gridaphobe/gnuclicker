@@ -6,7 +6,7 @@ Feature: Login.
     And click submit
     Then the course page is loaded
   
-  Scenario: Login successfully.
+  Scenario: Login with invalid username.
     When we visit the login page 
     And enter the username 'jstalindd'
     And click submit
