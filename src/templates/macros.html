@@ -14,7 +14,7 @@
   </div>
 {% endmacro %}
 
-{% macro lecture_list(lectures=[],cur_lecture=None) %}
+{% macro lecture_list(lectures=[],cur_lecture=None,isInstructor=False) %}
   <div class="lessons">
     <div class="heading">Lectures</div>
     {% for lecture in lectures %}
@@ -22,6 +22,22 @@
         <a href="?lectureId={{ lecture.lectureId }}">{{ lecture.lectureTitle }}</a>
       </div>
     {% endfor %}
-    <div class="item add">+ Add Lecture</div>
+    {% if isInstructor %}
+      <div class="item add">+ Add Lecture</div>
+    {% endif %}
+  </div>
+{% endmacro %}
+
+{% macro render_field(field, label=None) %}
+  <div class="input">
+    <div>{{ field.label }}{% if label %} {{label|upper}}{% endif %}</div>
+    {{ field(**kwargs)|safe }}
+  {% if field.errors %}
+    <ul class=errors>
+    {% for error in field.errors %}
+      <li>{{ error }}</li>
+    {% endfor %}
+    </ul>
+  {% endif %}
   </div>
 {% endmacro %}

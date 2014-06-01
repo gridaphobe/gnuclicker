@@ -38,21 +38,21 @@ _ERRTEXT = {
 }
 
 _ERRRETCODE = {
-  EBADCOURSEID: 200,
-  EBADSTUDENTID: 200,
-  EBADINSTRUCTORID: 200,
-  EBADLECTUREID: 200,
-  EBADUSERID: 200,
-  ELECTUREMISMATCH: 200,
-  EBADQUESTIONID: 200,
-  EQUESTIONMISMATCH : 200,
-  ENOACTIVEROUND: 200,
+  EBADCOURSEID: 404,
+  EBADSTUDENTID: 404,
+  EBADINSTRUCTORID: 404,
+  EBADLECTUREID: 404,
+  EBADUSERID: 404,
+  ELECTUREMISMATCH: 400,
+  EBADQUESTIONID: 404,
+  EQUESTIONMISMATCH : 400,
+  ENOACTIVEROUND: 400,
   EMISSINGARG: 400,
   EEMPTYARG: 400,
   ECORRECTNONSUBSET: 400,
-  EBADCHOICEID: 200,
-  ECHOICEMISMATCH: 200,
-  EQUESTIONACTIVE: 200,
+  EBADCHOICEID: 400,
+  ECHOICEMISMATCH: 400,
+  EQUESTIONACTIVE: 400,
   EBADINT: 400,
 }
 
@@ -72,8 +72,8 @@ def iserrobj(obj, err, *args):
   return obj == errobj(err, *args)
 
 def error(err, *args):
-  if (errretcode(err) == 200):
-    return jsonify({'error': errtext(err, *args)})
-  else:
-    abort(errretcode(err), message = errtext(err, *args))
+  # if (errretcode(err) == 200):
+  #   return jsonify({'error': errtext(err, *args)})
+  # else:
+  abort(errretcode(err), message = errtext(err, *args))
 

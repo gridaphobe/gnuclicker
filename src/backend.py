@@ -88,6 +88,8 @@ def json(data, code, headers=None):
 @api.representation('text/html')
 def html(data, code, headers=None):
   data['g'] = g
+  if code != 200:
+    data['template'] = 'error.html'
   resp = make_response(env.get_template(data['template']).render(data), code)
   resp.headers.extend(headers or {})
   return resp
@@ -375,38 +377,46 @@ class QuestionsApi(Resource):
                         'questions': questions,
                         'lectures': course.lectures},
               'template' : 'instructor/lesson.html'}
-api.add_resource(QuestionsApi, '/courses/<string:courseId>/questions')
+api.add_resource(QuestionsApi, '/courses/<string:courseId>/questions', endpoint='question_list')
 
 class AddQuestionApi(Resource):
   def __init__(self):
     # Arguments for get()
     self.getReqparse = reqparse.RequestParser()
-    self.getReqparse.add_argument('lectureId', type=str)
+    self.getReqparse.add_argument('lectureId', type=str, required=True)
 
     # Arguments for post()
     self.postReqparse = reqparse.RequestParser()
     self.postReqparse.add_argument('lectureId', type=str, required=True)
-    self.postReqparse.add_argument('title', type=str, required=True)
-    self.postReqparse.add_argument('body', type=str, required=True)
-    self.postReqparse.add_argument('choices', type=str, required=True,
-      action='append')
-    self.postReqparse.add_argument('correct-choices', type=str, required=True,
-      action='append')
-    self.postReqparse.add_argument('tag', type=str, action='append')
+    # self.postReqparse.add_argument('title', type=str, required=True)
+    # self.postReqparse.add_argument('prompt', type=str, required=True)
+    # self.postReqparse.add_argument('choices', type=str, required=True,
+    #   action='append')
+    # self.postReqparse.add_argument('correct-choices', type=str, required=True,
+    #   action='append')
+    # self.postReqparse.add_argument('tag', type=str, action='append')
 
     super(AddQuestionApi, self).__init__()
 
   def get(self, courseId):
+    args = self.getReqparse.parse_args()
+
     course = Course.query.get(courseId)
     if course == None:
       return error(EBADCOURSEID, courseId)
 
+    lectureId = getArg(args, "lectureId")
+    lecture = Lecture.query.get(lectureId)
+    if lecture == None:
+      return error(EBADLECTUREID, lectureId)
+
     courses = Course.query.all()
 
-    args = self.getReqparse.parse_args()
-    lectureId = getArg(args, "lectureId")
+    form = QuestionForm()
     return {'extra': {'course': course,
                       'courses': courses,
+                      'form': form,
+                      'lecture': lecture,
                       'lectures': course.lectures},
             'template' : 'instructor/add.html'}
 
@@ -416,21 +426,8 @@ class AddQuestionApi(Resource):
     '''
     args = self.postReqparse.parse_args()
     lectureId = getArg(args, "lectureId")
-    title = getArg(args, "title")
-    body = getArg(args, "body")
-    choices = nonempty(getArg(args, "choices"))
-    correctChoices = nonempty(getArg(args, "correct-choices"))
-    tags = getArg(args, "tag")
-
-    # Check that the answer choices are valid.
-    if choices is None or len(choices) == 0:
-      return error(EMISSINGARG, "choices")
-    if correctChoices is None or len(correctChoices) == 0:
-      return error(EMISSINGARG, "correct-choices")
-    choices = set(choices)
-    correctChoices = set(correctChoices)
-    if not correctChoices <= choices:
-      return error(ECORRECTNONSUBSET, ppset(correctChoices), ppset(choices))
+    courses = Course.query.all()
+    course = Course.query.get(courseId)
 
     # First check that lecture ID is valid.
     course = Course.query.get(courseId)
@@ -444,6 +441,19 @@ class AddQuestionApi(Resource):
 
     if lecture.course != course:
       return error(ELECTUREMISMATCH, lectureId, courseId)
+
+    form = QuestionForm()
+    if not form.validate_on_submit():
+      return {'extra': {'course': course,
+                        'courses': courses,
+                        'form': form,
+                        'lectures': course.lectures},
+              'template' : 'instructor/add.html'}
+
+    title =  form.title.data
+    body = form.prompt.data
+    choices = form.choices
+    tags = None
 
     # Create a question.
     question = Question(questionId=str(uuid.uuid4()), lecture=lecture,
@@ -467,20 +477,21 @@ class AddQuestionApi(Resource):
 
     # Answer choices.
     for choice in choices:
-      if choice in correctChoices:
+      if choice.correct.data:
         choiceValid = 1
       else:
         choiceValid = 0
       choiceObj = Choice(choiceId=str(uuid.uuid4()), question=question,
-        choiceStr=choice, choiceValid=choiceValid)
+        choiceStr=choice.answer.data, choiceValid=choiceValid)
       db.session.add(choiceObj)
 
     # Alright, commit to db.
     db.session.commit()
-    return myJson(question, ('questionId', 'lectureId', 'title', \
-      'questionBody', \
-      ('choices', [('choiceId', 'choiceValid', 'choiceStr')]),
-      ('correctChoices', [('choiceId', 'choiceValid', 'choiceStr')]), ))
+    return redirect(url_for('question_list', courseId=courseId, lectureId=lectureId))
+    # return myJson(question, ('questionId', 'lectureId', 'title', \
+    #   'questionBody', \
+    #   ('choices', [('choiceId', 'choiceValid', 'choiceStr')]),
+    #   ('correctChoices', [('choiceId', 'choiceValid', 'choiceStr')]), ))
 
 api.add_resource(AddQuestionApi, '/courses/<string:courseId>/addQuestion',
   endpoint='add_question')

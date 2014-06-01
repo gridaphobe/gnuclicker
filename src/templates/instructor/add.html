@@ -4,31 +4,29 @@
 
 {% set course  = extra.course %}
 {% set courses = extra.courses %}
+{% set form = extra.form %}
 
 {% block nav_items %}
   {{ macros.course_list(courses) }}
 {% endblock %}
 
 {% block body %}
-  <div class="lessons">
-    <div class="heading">Lessons</div>
-    {% for lecture in course.lectures %}
-      <div class="item">{{ lecture.lectureTitle }}</div>
-    {% endfor %}
-    <div class="item add">+ Add Lesson</div>
-  </div>
-
-  <form method="post" action="%dest%">
+  {{ macros.lecture_list(course.lectures,extra.lecture,True) }}
+  {% if form.errors %}
+    <div class="alert">Errors in form</div>
+  {% endif %}
+  <form method="post" action="">
+    {{form.csrf_token}}
     <div class="questions">
       <div class="heading">Edit Question</div>
       <div class="content">
-        <div class="input"><div>Title</div><input type="text" /></div>
-        <div class="input"><div>Question</div><input type="text" /></div>
-        <div class="input"><div>Answer 1</div><input type="text" /></div>
-        <div class="input"><div>Answer 2</div><input type="text" /></div>
-        <div class="input"><div>Answer 3</div><input type="text" /></div>
-        <div class="input"><div>Answer 4</div><input type="text" /></div>
-        <div class="input"><div>Answer 5</div><input type="text" /></div>
+        {{macros.render_field(form.title)}}
+        {{macros.render_field(form.prompt)}}
+        {% for choice in form.choices %}
+          {{choice.csrf_token}}
+          {{macros.render_field(choice.answer, loop.cycle('a','b','c','d','e'))}}
+          {{macros.render_field(choice.correct)}}
+        {% endfor %}
         <div class="buttons">
         <button type="submit">Save</button> <button>Cancel</button>
         </div>

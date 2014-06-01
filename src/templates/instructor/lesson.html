@@ -5,6 +5,7 @@
 {% set questions = extra.questions %}
 {% set course  = extra.course %}
 {% set courses = extra.courses %}
+{% set isInstructor = g.user.userId == course.instructorId %}
 
 {% block title %}
   Course
@@ -19,7 +20,7 @@
 {% endblock %}
 
 {% block body %}
-  {{ macros.lecture_list(course.lectures, extra.lecture) }}
+  {{ macros.lecture_list(course.lectures, extra.lecture, isInstructor) }}
   <div class="questions">
     <div class="heading">Questions</div>
     {% for question in questions %}
@@ -43,11 +44,15 @@
             <div class="result" style="width: {{ percent }}%;">{{ percent }}%</div>
           </div>
         {% endfor %}
-        <div class="buttons">
-          <button>Open Poll</button> <button>Clear Results</button>
-        </div>
+        {% if isInstructor %}
+          <div class="buttons">
+            <button>Open Poll</button> <button>Clear Results</button>
+          </div>
+        {% endif %}
       </div>
     {% endfor %}
-    <a class="item add" href="addQuestion">+ Add Question</a>
+    {% if isInstructor and extra.lecture %}
+      <a class="item add" href="addQuestion?lectureId={{extra.lecture.lectureId}}">+ Add Question</a>
+    {% endif %}
   </div>
 {% endblock %}
