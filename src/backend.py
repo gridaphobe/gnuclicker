@@ -164,6 +164,9 @@ class CoursesListApi(Resource):
       # Return all classes
       res = Course.query.all()
 
+    res = [course for course in res
+           if course in (g.user.enrolledIn + g.user.instructs)]
+
     return {'res': objectify(res, [("courseId", "courseTitle", "instructorId")]),
             'extra': {'courses': res},
             'template': 'landing.html'}
@@ -283,14 +286,19 @@ class QuestionsApi(Resource):
               ('choices', [('choiceId','choiceStr','choiceValid')]))]
 
     courses = Course.query.all()
-
-    activeQuestion = Question.query.filter(Question.activeRound != '').\
-                     filter(Course.lectures.any(Lecture.lectureId==Question.lectureId)).\
-                     first()
-    print activeQuestion
+    courses = [c for c in courses
+               if c in (g.user.enrolledIn + g.user.instructs)]
 
     if course == None:
       return error(EBADCOURSEID, courseId)
+    if course not in courses:
+      return error(EBADCOURSEID, courseId)
+
+    try:
+      activeQuestion = [q for q in Question.query.filter(Question.activeRound != '')
+                        if q.lecture.course == course][0]
+    except:
+      activeQuestion = None
 
     if questionId != None:
       question = Question.query.get(questionId)
@@ -399,13 +407,17 @@ class PollApi(Resource):
               ('choices', [('choiceId','choiceStr','choiceValid')]))]
 
     courses = Course.query.all()
+    courses = [c for c in courses
+               if c in (g.user.enrolledIn + g.user.instructs)]
 
     if course == None:
       return error(EBADCOURSEID, courseId)
 
-    question = Question.query.filter(Question.activeRound != '').\
-               filter(Course.lectures.any(Lecture.lectureId==Question.lectureId)).\
-               first()
+    try:
+      question = [q for q in Question.query.filter(Question.activeRound != '')
+                  if q.lecture.course == course][0]
+    except:
+      question = None
 
     if not question:
       return error(ENOACTIVEQUESTIONS, course.courseTitle)
@@ -468,6 +480,8 @@ class AddQuestionApi(Resource):
       #   form.choices[i].correct.data = bool(choice.choiceValid)
 
     courses = Course.query.all()
+    courses = [c for c in courses
+               if c in (g.user.enrolledIn + g.user.instructs)]
 
     return {'extra': {'course': course,
                       'courses': courses,
@@ -483,6 +497,8 @@ class AddQuestionApi(Resource):
     args = self.postReqparse.parse_args()
     lectureId = getArg(args, "lectureId")
     courses = Course.query.all()
+    courses = [c for c in courses
+               if c in (g.user.enrolledIn + g.user.instructs)]
     course = Course.query.get(courseId)
     questionId = getArg(args, "questionId")
 
