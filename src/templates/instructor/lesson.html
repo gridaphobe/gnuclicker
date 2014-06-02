@@ -3,6 +3,7 @@
 {% import "macros.html" as macros %}
 
 {% set questions = extra.questions %}
+{% set activeQuestion = extra.activeQuestion %}
 {% set course  = extra.course %}
 {% set courses = extra.courses %}
 {% set isInstructor = g.user.userId == course.instructorId %}
@@ -21,6 +22,11 @@
 
 {% block body %}
   {{ macros.lecture_list(course.lectures, extra.lecture, isInstructor) }}
+  {% if activeQuestion %}
+    <div class="alert">
+      Active Question: <a href="activeQuestion">{{activeQuestion.title}}</a>
+    </div>
+  {% endif %}
   <div class="questions">
     <div class="heading">Questions</div>
     {% for question in questions %}

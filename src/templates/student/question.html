@@ -25,7 +25,12 @@
 {% block body %}
   <div class="question">
     <div class="header">
-      <h3>{{ question.title }}<span class="course">{{ course.courseTitle }}</span></h3>
+      <h3>
+        <a href="/courses/{{course.courseId}}/questions?questionId={{question.questionId}}">{{ question.title }}</a>
+        <span class="course">
+          <a href="/courses/{{course.courseId}}/questions">{{ course.courseTitle }}</a>
+        </span>
+      </h3>
     </div>
     <div class="body">
       <h4 class="prompt">{{ question.questionBody }}</h4>

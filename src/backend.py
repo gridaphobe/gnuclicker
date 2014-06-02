@@ -284,6 +284,11 @@ class QuestionsApi(Resource):
 
     courses = Course.query.all()
 
+    activeQuestion = Question.query.filter(Question.activeRound != '').\
+                     filter(Course.lectures.any(Lecture.lectureId==Question.lectureId)).\
+                     first()
+    print activeQuestion
+
     if course == None:
       return error(EBADCOURSEID, courseId)
 
@@ -306,11 +311,12 @@ class QuestionsApi(Resource):
 
       return {'res': objectify([question], qDesc),
               'extra': {'courses': courses,
-                        'question': question,
+                        'questions': [question],
+                        'activeQuestion': activeQuestion,
                         'lecture': question.lecture,
                         'course': course,
                         'currentTime': time.time()},
-              'template' : 'student/question.html'}
+              'template' : 'instructor/lesson.html'}
 
     if lectureId is None:
       # Get all questions for course across all lectures.
@@ -333,6 +339,7 @@ class QuestionsApi(Resource):
               'extra': {'courses': courses,
                         'course': course,
                         'lecture': None,
+                        'activeQuestion': activeQuestion,
                         'questions': questions,
                         'lectures': course.lectures},
               'template' : 'instructor/lesson.html'}
@@ -355,6 +362,7 @@ class QuestionsApi(Resource):
                 'extra': {'courses': courses,
                           'course': course,
                           'lecture': lecture,
+                          'activeQuestion': activeQuestion,
                           'questions': questions,
                           'lectures': course.lectures},
                 'template' : 'instructor/lesson.html'}
@@ -375,19 +383,55 @@ class QuestionsApi(Resource):
                         'course': course,
                         'lecture': lecture,
                         'questions': questions,
+                        'activeQuestion': activeQuestion,
                         'lectures': course.lectures},
               'template' : 'instructor/lesson.html'}
 api.add_resource(QuestionsApi, '/courses/<string:courseId>/questions', endpoint='question_list')
+
+class PollApi(Resource):
+  def get(self, courseId):
+    '''
+    Return the polling view for the currently open question in the given course.
+    '''
+    course = Course.query.get(courseId)
+    qDesc = [('questionId', 'lectureId', 'title',
+              'questionBody', ('tags', [('tagId', 'tagText')]), 'activeRound',
+              ('choices', [('choiceId','choiceStr','choiceValid')]))]
+
+    courses = Course.query.all()
+
+    if course == None:
+      return error(EBADCOURSEID, courseId)
+
+    question = Question.query.filter(Question.activeRound != '').\
+               filter(Course.lectures.any(Lecture.lectureId==Question.lectureId)).\
+               first()
+
+    if not question:
+      return error(ENOACTIVEQUESTIONS, course.courseTitle)
+    if course not in (g.user.enrolledIn + g.user.instructs):
+      return error(ENOACTIVEQUESTIONS, course.courseTitle)
+
+    return {'res': objectify([question], qDesc),
+            'extra': {'courses': courses,
+                      'question': question,
+                      'lecture': question.lecture,
+                      'course': course,
+                      'currentTime': time.time()},
+            'template' : 'student/question.html'}
+api.add_resource(PollApi, '/courses/<string:courseId>/activeQuestion', endpoint='activeQuestion')
 
 class AddQuestionApi(Resource):
   def __init__(self):
     # Arguments for get()
     self.getReqparse = reqparse.RequestParser()
     self.getReqparse.add_argument('lectureId', type=str, required=True)
+    self.getReqparse.add_argument('questionId', type=str)
 
     # Arguments for post()
     self.postReqparse = reqparse.RequestParser()
     self.postReqparse.add_argument('lectureId', type=str, required=True)
+    self.postReqparse.add_argument('questionId', type=str)
     # self.postReqparse.add_argument('title', type=str, required=True)
     # self.postReqparse.add_argument('prompt', type=str, required=True)
     # self.postReqparse.add_argument('choices', type=str, required=True,
@@ -400,6 +444,7 @@ class AddQuestionApi(Resource):
 
   def get(self, courseId):
     args = self.getReqparse.parse_args()
+    form = QuestionForm()
 
     course = Course.query.get(courseId)
     if course == None:
@@ -410,9 +455,20 @@ class AddQuestionApi(Resource):
     if lecture == None:
       return error(EBADLECTUREID, lectureId)
 
+    questionId = getArg(args, "questionId")
+    question = Question.query.get(str(questionId))
+    if question is not None:
+      form = QuestionForm(title=question.title, prompt=question.questionBody,
+                          choices=[{'answer':choice.choiceStr,'correct':choice.choiceValid}
+                                   for choice in question.choices])
+      # form.title.data = question.title
+      # form.prompt = question.questionBody
+      # for i, choice in enumerate(question.choices):
+      #   form.choices[i].answer.data = choice.choiceStr
+      #   form.choices[i].correct.data = bool(choice.choiceValid)
+
     courses = Course.query.all()
 
-    form = QuestionForm()
     return {'extra': {'course': course,
                       'courses': courses,
                       'form': form,
@@ -428,6 +484,7 @@ class AddQuestionApi(Resource):
     lectureId = getArg(args, "lectureId")
     courses = Course.query.all()
     course = Course.query.get(courseId)
+    questionId = getArg(args, "questionId")
 
     # First check that lecture ID is valid.
     course = Course.query.get(courseId)
@@ -447,6 +504,7 @@ class AddQuestionApi(Resource):
       return {'extra': {'course': course,
                         'courses': courses,
                         'form': form,
+                        'lecture': lecture,
                         'lectures': course.lectures},
               'template' : 'instructor/add.html'}
 
@@ -455,35 +513,45 @@ class AddQuestionApi(Resource):
     choices = form.choices
     tags = None
 
-    # Create a question.
-    question = Question(questionId=str(uuid.uuid4()), lecture=lecture,
-      title=title, questionBody=body)
-    db.session.add(question)
+    # Updating or creating?
+    question = Question.query.get(questionId)
+    if question is not None:
+      question.lecture = lecture
+      question.title = title
+      question.questionBody = body
+      for i in range(0,5):
+        question.choices[i].choiceStr = choices[i].answer.data
+        question.choices[i].choiceValid = int(choices[i].correct.data)
+    else:
+      # Create a question.
+      question = Question(questionId=str(uuid.uuid4()), lecture=lecture,
+                          title=title, questionBody=body)
+      db.session.add(question)
 
-    # Handle tags.
-    if tags is not None:
-      for tagText in tags:
-        # Find or create.
-        tags = list(Tag.query.filter(Tag.tagText == tagText))
-        tag = None
+      # Handle tags.
+      if tags is not None:
+        for tagText in tags:
+          # Find or create.
+          tags = list(Tag.query.filter(Tag.tagText == tagText))
+          tag = None
 
-        if len(tags) == 0:
-          tag = Tag(tagId=str(uuid.uuid4()), tagText=tagText)
-          db.session.add(tag)
+          if len(tags) == 0:
+            tag = Tag(tagId=str(uuid.uuid4()), tagText=tagText)
+            db.session.add(tag)
+          else:
+            tag = tags[0]
+
+          question.tags.append(tag)
+
+      # Answer choices.
+      for choice in choices:
+        if choice.correct.data:
+          choiceValid = 1
         else:
-          tag = tags[0]
-
-        question.tags.append(tag)
-
-    # Answer choices.
-    for choice in choices:
-      if choice.correct.data:
-        choiceValid = 1
-      else:
-        choiceValid = 0
-      choiceObj = Choice(choiceId=str(uuid.uuid4()), question=question,
-        choiceStr=choice.answer.data, choiceValid=choiceValid)
-      db.session.add(choiceObj)
+          choiceValid = 0
+        choiceObj = Choice(choiceId=str(uuid.uuid4()), question=question,
+          choiceStr=choice.answer.data, choiceValid=choiceValid)
+        db.session.add(choiceObj)
 
     # Alright, commit to db.
     db.session.commit()

@@ -321,6 +321,31 @@ ul.dropdown.show {
   }
 
 @media only screen and (max-width: 480px) {
+  .alert {
+    margin-top: 16px;
+    width: 100%;
+  }
+}
+
+@media only screen and (min-width: 481px) {
+  .alert {
+    width: calc(100% - 340px);
+  }
+}
+
+.alert {
+  border-radius: 4px;
+  border: 1px solid #d5d5d5;
+  padding: 0 20px;
+  margin-bottom: 16px;
+  background-color: #fcb4bf;
+  background-image: linear-gradient(#ffe2e5, #fcb4bf);
+  background-repeat: repeat-x;
+  height: 35px;
+  line-height: 35px;
+}
+
+@media only screen and (max-width: 480px) {
   .questions {
     margin-top: 16px;
     width: 100%;
