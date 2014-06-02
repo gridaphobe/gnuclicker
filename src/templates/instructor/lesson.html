@@ -42,17 +42,25 @@
         {% for choice in question.choices %}
           {% if responses %}
             {% set percent = round.choicesOf(choice.choiceId)|count / responses * 100 %}
+            {% set myChoiceId = round.userResponse(g.user).choiceId %}
           {% else %}
             {% set percent = 0 %}
+            {% set myChoiceId = '' %}
           {% endif %}
-          <div class="answer{% if choice.choiceValid == 1 %} correct{% endif %}">
+          <div class="answer{% if choice.choiceValid == 1 %} correct{% endif %}{% if choice.choiceId == myChoiceId %} chosen{% endif %}">
             <div class="text">{{ choice.choiceStr }}</div>
             <div class="result" style="width: {{ percent }}%;">{{ percent }}%</div>
           </div>
         {% endfor %}
         {% if isInstructor %}
           <div class="buttons">
-            <button>Open Poll</button> <button>Clear Results</button>
+            {# <button>Open Poll</button> <button>Clear Results</button> #}
+            {% if question.getActiveRound() %}
+              <form method="POST" action="/courses/{{course.courseId}}/question/{{question.questionId}}/end"><button type="submit">Close Poll</button></form>
+            {% else %}
+              <form method="POST" action="/courses/{{course.courseId}}/question/{{question.questionId}}/start"><button type="submit">Open Poll</button></form>
+            {% endif %}
+            <a href="addQuestion?lectureId={{question.lecture.lectureId}}&questionId={{question.questionId}}"><button>Edit Question</button></a>
           </div>
         {% endif %}
       </div>

@@ -26,9 +26,9 @@
   <div class="question">
     <div class="header">
       <h3>
-        <a href="/courses/{{course.courseId}}/questions?questionId={{question.questionId}}">{{ question.title }}</a>
+        {{ question.title }}
         <span class="course">
-          <a href="/courses/{{course.courseId}}/questions">{{ course.courseTitle }}</a>
+          {{ course.courseTitle }}
         </span>
       </h3>
     </div>
@@ -58,10 +58,11 @@
       </div>
       <div class="timer">
         {% if round %}
-          Timer: <span id="timer">{{ round.startTime - extra.currentTime }}</span> sec
+          Timer: <span id="timer">{{ (extra.currentTime - round.startTime)|int }}</span> sec
         {% else %}
           No active round
         {% endif %}
+        <a href="/courses/{{course.courseId}}/questions"><button>Go to course</button></a>
       </div>
     </div>
   </div>

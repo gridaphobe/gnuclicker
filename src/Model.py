@@ -171,6 +171,12 @@ class Round(db.Model):
   responses = db.relationship('Response', backref='roundFor')
   def choicesOf(self, choiceId):
     return filter(lambda c: c.choiceId == choiceId, self.responses)
+  def userResponse(self, user):
+    r = filter(lambda c: c.studentId == user.userId, self.responses)
+    if r:
+      return r[0]
+    else:
+      return None
 
 class Response(db.Model):
   '''

@@ -343,6 +343,8 @@ ul.dropdown.show {
   background-repeat: repeat-x;
   height: 35px;
   line-height: 35px;
+  whitespace: nowrap;
+  text-overflow: ellipsis;
 }
 
 @media only screen and (max-width: 480px) {
@@ -421,10 +423,6 @@ ul.dropdown.show {
   .questions > .content > .answer {
   }
 
-  .questions > .content > .answer.correct {
-    font-weight: bold;
-  }
-
     .questions > .content > .text {
       padding: 0px 0px 20px;
       font-weight: bold;
@@ -469,6 +467,18 @@ ul.dropdown.show {
       border: 1px solid #d5d5d5;
       background-image: linear-gradient(#ffe2e5, #fcb4bf);
       border-radius: 4px;
+    }
+
+    .questions > .content > .answer.correct > .result {
+      background-image: linear-gradient(#eaffd8, #a0e894);
+    }
+
+    .questions > .content > .answer.chosen > .result {
+      background-image: linear-gradient(#f2f5ff, #b4bffc);
+    }
+
+    .questions > .content > .answer.chosen.correct > .result {
+      background-image: linear-gradient(#b4bffc, #a0e894);
     }
 
   .questions > .content > .input {

@@ -314,7 +314,7 @@ class QuestionsApi(Resource):
         return error(EBADQUESTIONID, questionId)
 
       if course.instructor != g.user:
-        if len(question.rounds) == 0:
+        if len(question.rounds) == 0 or question.rounds[-1].endTime == -1:
           return error(EBADQUESTIONID, questionId)
 
       return {'res': objectify([question], qDesc),
@@ -333,7 +333,7 @@ class QuestionsApi(Resource):
         for question in lecture.questions:
           # If we're not the instructor only show asked questions.
           if course.instructor != g.user:
-            if len(question.rounds) == 0:
+            if len(question.rounds) == 0 or question.rounds[-1].endTime == -1:
               continue
 
           if tags is None:
@@ -362,7 +362,7 @@ class QuestionsApi(Resource):
         for question in lecture.questions:
           # If we're not the instructor only show asked questions.
           if course.instructor != g.user:
-            if len(question.rounds) == 0:
+            if len(question.rounds) == 0 or question.rounds[-1].endTime == -1:
               continue
             questions.append(question)
         questions = self.sortByTime(questions)
@@ -379,7 +379,7 @@ class QuestionsApi(Resource):
         for question in lecture.questions:
           if course.instructor != g.user:
             # If we're not the instructor only show asked questions.
-            if len(question.rounds) == 0:
+            if len(question.rounds) == 0 or question.rounds[-1].endTime == -1:
               continue
           questionTags = set([tag.tagText for tag in question.tags])
 
@@ -529,8 +529,12 @@ class AddQuestionApi(Resource):
     choices = form.choices
     tags = None
 
+    if questionId is not None:
+      question = Question.query.get(questionId)
+    else:
+      question = None
+
     # Updating or creating?
-    question = Question.query.get(questionId)
     if question is not None:
       question.lecture = lecture
       question.title = title
@@ -802,9 +806,11 @@ class RoundStartApi(Resource):
       startTime=now, endTime=-1)
     question.activeRound = answerRound.roundId
     db.session.add(answerRound)
+    db.session.commit()
     # Done, return round.
-    return myJson(answerRound, ('roundId', 'questionId', 'startTime', \
-      'endTime', ('responses', [('responseId', 'roundId', 'studentId', 'choiceId')])))
+    return redirect(url_for('question_list', courseId=courseId, questionId=questionId))
+    # return myJson(answerRound, ('roundId', 'questionId', 'startTime', \
+    #   'endTime', ('responses', [('responseId', 'roundId', 'studentId', 'choiceId')])))
 
 api.add_resource(RoundStartApi,
   '/courses/<string:courseId>/question/<string:questionId>/start',
@@ -838,8 +844,9 @@ class RoundEndApi(Resource):
     answerRound.endTime = now
     question.activeRound = ""
     db.session.commit()
-    return myJson(answerRound, ('roundId', 'questionId', 'startTime', \
-      'endTime', ('responses', [('responseId', 'roundId', 'studentId', 'choiceId')])))
+    return redirect(url_for('question_list', courseId=courseId, questionId=questionId))
+    # return myJson(answerRound, ('roundId', 'questionId', 'startTime', \
+    #   'endTime', ('responses', [('responseId', 'roundId', 'studentId', 'choiceId')])))
 
 api.add_resource(RoundEndApi,
   '/courses/<string:courseId>/question/<string:questionId>/end',
