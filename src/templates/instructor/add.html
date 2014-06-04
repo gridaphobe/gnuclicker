@@ -28,7 +28,10 @@
           {{macros.render_field(choice.correct)}}
         {% endfor %}
         <div class="buttons">
-        <button type="submit">Save</button> <button>Cancel</button>
+          <button type="submit">Save</button>
+          <a href="/courses/{{course.courseId}}/questions?lectureId={{extra.lecture.lectureId}}">
+            <input type="button" value="Cancel" />
+          </a>
         </div>
       </div>
     </div>
