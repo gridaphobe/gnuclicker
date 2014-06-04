@@ -121,7 +121,8 @@ class Question(db.Model):
   lectureId = db.Column(db.String, db.ForeignKey('lecture.lectureId'))
   title = db.Column(db.String)
   questionBody = db.Column(db.String)
-  choices = db.relationship('Choice', backref='question')
+  choices = db.relationship('Choice', backref='question',
+    order_by='Choice.choiceIdx')
   rounds = db.relationship('Round', backref='question')
   activeRound = db.Column(db.String)
 
@@ -151,6 +152,7 @@ class Choice(db.Model):
   questionId = db.Column(db.String, db.ForeignKey('question.questionId'))
   choiceValid = db.Column(db.Integer)
   choiceStr = db.Column(db.String)
+  choiceIdx = db.Column(db.Integer)
 
 class Round(db.Model):
   '''

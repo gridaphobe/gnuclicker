@@ -135,17 +135,18 @@ def dbPopulateDummyValues(db):
     choice6Id = uuid.uuid4()
 
     choice1 = Choice(choiceId=str(choice1Id), question=question1,
-      choiceStr="European", choiceValid=0)
+      choiceStr="European", choiceValid=0, choiceIdx=0)
     choice2 = Choice(choiceId=str(choice2Id), question=question1,
-      choiceStr="African", choiceValid=0)
+      choiceStr="African", choiceValid=0, choiceIdx=1)
     choice3 = Choice(choiceId=str(choice3Id), question=question1,
-      choiceStr="AAAAARGGGHHHH", choiceValid=1)
+      choiceStr="AAAAARGGGHHHH", choiceValid=1, choiceIdx=2)
     choice4 = Choice(choiceId=str(choice4Id), question=question1,
-      choiceStr="5 mph", choiceValid=1)
+      choiceStr="5 mph", choiceValid=1, choiceIdx=3)
     choice5 = Choice(choiceId=str(choice5Id), question=question2,
-      choiceStr="NO CHOICE", choiceValid=1)
+      choiceStr="NO CHOICE", choiceValid=1, choiceIdx=0)
     choice6 = Choice(choiceId=str(choice6Id), question=question5,
-                     choiceStr="CHOICE IS AN ILLUSION (Michael)", choiceValid=1)
+                     choiceStr="CHOICE IS AN ILLUSION (Michael)", choiceValid=1,
+                     choiceIdx=0)
 
     # Add answers to session.
     db.session.add(choice1)

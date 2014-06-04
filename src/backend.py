@@ -539,9 +539,11 @@ class AddQuestionApi(Resource):
       question.lecture = lecture
       question.title = title
       question.questionBody = body
-      for i in range(0,5):
-        question.choices[i].choiceStr = choices[i].answer.data
-        question.choices[i].choiceValid = int(choices[i].correct.data)
+      # Update all answer choices.
+      for choice in question.choices:
+        idx = choice.choiceIdx
+        choice.choiceStr = choices[idx].answer.data
+        choice.choiceValid = int(choices[idx].correct.data)
     else:
       # Create a question.
       question = Question(questionId=str(uuid.uuid4()), lecture=lecture,
@@ -564,14 +566,17 @@ class AddQuestionApi(Resource):
           question.tags.append(tag)
 
       # Answer choices.
+      choiceIdx = 0
       for choice in choices:
         if choice.correct.data:
           choiceValid = 1
         else:
           choiceValid = 0
         choiceObj = Choice(choiceId=str(uuid.uuid4()), question=question,
-          choiceStr=choice.answer.data, choiceValid=choiceValid)
+          choiceStr=choice.answer.data, choiceValid=choiceValid,
+          choiceIdx=choiceIdx)
         db.session.add(choiceObj)
+        choiceIdx += 1
 
     # Alright, commit to db.
     db.session.commit()
@@ -652,14 +657,16 @@ class EditQuestionApi(Resource):
       db.session.delete(choice)
 
     # Recreate choices.
+    choiceIdx = 0
     for choice in choices:
       if choice in correctChoices:
         choiceValid = 1
       else:
         choiceValid = 0
       choiceObj = Choice(choiceId=str(uuid.uuid4()), question=question,
-        choiceStr=choice, choiceValid=choiceValid)
+        choiceStr=choice, choiceValid=choiceValid, choiceIdx=choiceIdx)
       db.session.add(choiceObj)
+      choiceIdx += 1
 
     # Alright, commit.
     db.session.commit()
