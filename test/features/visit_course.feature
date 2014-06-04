@@ -25,6 +25,8 @@ Feature: Go to each course.
 
   Scenario: Return to course page.
     Given we are logged in as jstalin
-    And we are viewing a question
-    When we click Home
+    And we are on the course page
+    When we visit the course CSE210
+    And we click on the first question of CSE210
+    And we click Home
     Then we should be on the course page

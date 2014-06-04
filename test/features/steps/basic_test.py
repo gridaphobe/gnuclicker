@@ -1,10 +1,11 @@
 from behave import *
 from selenium.webdriver.support.ui import WebDriverWait
+import utilities
 
 
 @when('we visit the login page')
 def step_impl(context):
-    context.browser.get('http://gnuclicker.herokuapp.com/courses')
+    context.browser.get('http://' + utilities.HOSTNAME + '/courses')
     WebDriverWait(context.browser, 30).until(lambda driver: driver.find_element_by_tag_name('button'))
 
 
@@ -25,10 +26,12 @@ def step_impl(context):
 
 @then('the course page is loaded')
 def step_impl(context):
-    assert context.browser.current_url == 'http://gnuclicker.herokuapp.com/courses'
+    WebDriverWait(context.browser, 30).until(lambda driver: driver.find_element_by_class_name('heading'))
+    print context.browser.current_url
+    assert context.browser.current_url == 'http://' + utilities.HOSTNAME + '/courses'
 
 
 
 @then('the user receives an error')
 def step_impl(context):
-    assert context.browser.current_url == 'http://gnuclicker.herokuapp.com/login'
+    assert context.browser.current_url == 'http://' + utilities.HOSTNAME + '/login'
