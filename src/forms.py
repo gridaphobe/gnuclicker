@@ -14,3 +14,6 @@ class QuestionForm(Form):
   title = TextField('Title', validators=[Required()])
   prompt = TextField('Prompt', validators=[Required()])
   choices = FieldList(FormField(AnswerForm),min_entries=5)
+
+class LectureForm(Form):
+  title = TextField('Title', validators=[Required()])

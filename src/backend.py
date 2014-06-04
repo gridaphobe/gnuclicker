@@ -185,9 +185,53 @@ class LecturesListApi(Resource):
     else:
       return error(EBADCOURSEID, courseId)
 
-
 api.add_resource(LecturesListApi, '/courses/<string:courseId>/lectures',
   endpoint='lectures_list')
+
+class LecturesEditApi(Resource):
+  def get(self, courseId):
+    '''
+    Edit lectures
+    '''
+    course = Course.query.get(courseId)
+    if (not course):
+      return error(EBADCOURSEID, courseId)
+
+    form = LectureForm()
+    courses = Course.query.all()
+
+    return {'extra': {'course': course,
+                      'courses': courses,
+                      'form': form,
+                      'lectures': course.lectures,
+		      'lecture': None},
+            'template' : 'instructor/add_lesson.html'}
+
+  def post(self, courseId):
+    course = Course.query.get(courseId)
+    if course == None:
+      return error(EBADCOURSEID, courseId)
+
+    form = LectureForm()
+    courses = Course.query.all()
+    if not form.validate_on_submit():
+      return {'extra': {'course': course,
+                        'courses': courses,
+                        'form': form,
+                        'lectures': course.lectures,
+		        'lecture': None},
+              'template' : 'instructor/add_lesson.html'}
+
+    title = form.title.data
+    lectureId = str(uuid.uuid4())
+    lecture = Lecture(lectureId=lectureId, lectureTitle=title,
+      courseId=courseId, date=datetime.datetime.now())
+    db.session.add(lecture)
+    db.session.commit()
+    return redirect(url_for('question_list', courseId=courseId, lectureId=lectureId))
+
+api.add_resource(LecturesEditApi, '/courses/<string:courseId>/editLecture',
+  endpoint='lectures_edit')
 
 class CourseStudentManifestApi(Resource):
   def __init__(self):

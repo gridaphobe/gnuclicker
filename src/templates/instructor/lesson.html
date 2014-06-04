@@ -21,7 +21,7 @@
 {% endblock %}
 
 {% block body %}
-  {{ macros.lecture_list(course.lectures, extra.lecture, isInstructor) }}
+  {{ macros.lecture_list(course.lectures, extra.lecture, course, isInstructor) }}
   {% if activeQuestion %}
     <div class="alert">
       Active Question: <a href="activeQuestion">{{activeQuestion.title}}</a>

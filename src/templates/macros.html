@@ -14,7 +14,7 @@
   </div>
 {% endmacro %}
 
-{% macro lecture_list(lectures=[],cur_lecture=None,isInstructor=False) %}
+{% macro lecture_list(lectures=[],cur_lecture=None,course=None,isInstructor=False) %}
   <div class="lessons">
     <div class="heading">Lectures</div>
     {% for lecture in lectures %}
@@ -23,7 +23,9 @@
       </div>
     {% endfor %}
     {% if isInstructor %}
-      <div class="item add">+ Add Lecture</div>
+      <div class="item add">
+			  <a href="/courses/{{ course.courseId }}/editLecture">+ Add Lecture</a>
+			</div>
     {% endif %}
   </div>
 {% endmacro %}

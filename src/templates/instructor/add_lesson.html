@@ -1,0 +1,34 @@
+{% extends "page.html" %}
+
+{% import "macros.html" as macros %}
+
+{% set course  = extra.course %}
+{% set courses = extra.courses %}
+{% set form = extra.form %}
+{% set isInstructor = g.user.userId == course.instructorId %}
+
+{% block nav_items %}
+  {{ macros.course_list(courses) }}
+{% endblock %}
+
+{% block body %}
+  {{ macros.lecture_list(course.lectures, extra.lecture, course, isInstructor) }}
+  {% if form.errors %}
+    <div class="alert">Errors in form</div>
+  {% endif %}
+  <form method="post" action="">
+    {{form.csrf_token}}
+    <div class="questions">
+      <div class="heading">Add Lession</div>
+      <div class="content">
+        {{macros.render_field(form.title)}}
+        <div class="buttons">
+          <button type="submit">Save</button>
+          <a href="/courses/{{course.courseId}}/questions">
+            <input type="button" value="Cancel" />
+          </a>
+        </div>
+      </div>
+    </div>
+  </form>
+{% endblock %}
