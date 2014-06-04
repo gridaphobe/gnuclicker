@@ -729,10 +729,6 @@ class ResponseApi(Resource):
     self.reqparse.add_argument('choiceId', type=str, required=True)
     super(ResponseApi, self).__init__()
 
-  def getSomeStudentInCourse(self, course):
-    # XXX Temporary hack till we have user logins.
-    return course.students[0]
-
   def post(self, courseId, questionId):
     '''
     Given the course and question, note that the current user submitted the
@@ -762,18 +758,27 @@ class ResponseApi(Resource):
     if choice.question != question:
       return error(ECHOICEMISMATCH, choiceId, questionId)
 
-    # TODO: Once user logins/identities are implemented, we'll pull the student
-    # ID from the session. For now, we hardcode it as being the answer
-    # for...some random student in the class.
-    student = self.getSomeStudentInCourse(course)
+    student = g.user
 
-    # Alright, record the answer for this round for this question.
-    args = self.reqparse.parse_args()
-    response = Response(
-      responseId=str(uuid.uuid4()),
-      roundFor=Round.query.get(question.activeRound),
-      studentId=student.userId,
-      choiceId=choice.choiceId)
+    # Check if there's a current answer for user for round for user.
+    response = Response.query.filter(Response.studentId == student.userId,
+      Response.roundId==question.activeRound).scalar()
+    if response is not None:
+      # Edit response.
+      print("Edit response User %s question: %s old answer: %s new answer: %s" %
+        (student.universityId,
+        question.title, Choice.query.get(response.choiceId).choiceStr, choice.choiceStr))
+      response.choiceId = choice.choiceId
+    else:
+      # Create response
+      print("Create response User %s question: %s answer: %s" % (student.universityId,
+        question.title, choice.choiceStr))
+      response = Response(
+        responseId=str(uuid.uuid4()),
+        roundFor=Round.query.get(question.activeRound),
+        studentId=student.userId,
+        choiceId=choice.choiceId)
+
     db.session.add(response)
     db.session.commit()
 
