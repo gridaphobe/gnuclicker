@@ -135,17 +135,23 @@ def dbPopulateDummyValues(db):
     choice6Id = uuid.uuid4()
 
     choice1 = Choice(choiceId=str(choice1Id), question=question1,
-      choiceStr="European", choiceValid=0)
+      choiceStr="European", choiceValid=0, choiceIdx=0)
     choice2 = Choice(choiceId=str(choice2Id), question=question1,
-      choiceStr="African", choiceValid=0)
+      choiceStr="African", choiceValid=0, choiceIdx=1)
     choice3 = Choice(choiceId=str(choice3Id), question=question1,
-      choiceStr="AAAAARGGGHHHH", choiceValid=1)
+      choiceStr="AAAAARGGGHHHH", choiceValid=1, choiceIdx=2)
     choice4 = Choice(choiceId=str(choice4Id), question=question1,
-      choiceStr="5 mph", choiceValid=1)
-    choice5 = Choice(choiceId=str(choice5Id), question=question2,
-      choiceStr="NO CHOICE", choiceValid=1)
-    choice6 = Choice(choiceId=str(choice6Id), question=question5,
-                     choiceStr="CHOICE IS AN ILLUSION (Michael)", choiceValid=1)
+      choiceStr="5 mph", choiceValid=1, choiceIdx=3)
+    choice5 = Choice(choiceId=str(choice5Id), question=question1,
+      choiceStr="6 mph", choiceValid=0, choiceIdx=4)
+
+    for question in [question2, question3, question4, question5]:
+      for idx in range(5):
+        choice = Choice(choiceId=str(uuid.uuid4()), question=question,
+        choiceStr="Choice %d" % (idx), choiceValid = True if idx == 2 else
+        False, choiceIdx = idx)
+        db.session.add(choice)
+        question.choices.append(choice)
 
     # Add answers to session.
     db.session.add(choice1)
@@ -153,16 +159,13 @@ def dbPopulateDummyValues(db):
     db.session.add(choice3)
     db.session.add(choice4)
     db.session.add(choice5)
-    db.session.add(choice6)
 
     # Add answers to possible answers set.
     question1.choices.append(choice1)
     question1.choices.append(choice2)
     question1.choices.append(choice3)
     question1.choices.append(choice4)
-
-    question2.choices.append(choice5)
-    question5.choices.append(choice6)
+    question1.choices.append(choice5)
 
     # Add one round of answers to the first question.
     round1Id = uuid.uuid4()
@@ -221,13 +224,12 @@ def dbPopulateDummyValues(db):
     res.__dict__["choice3"] = choice3
     res.__dict__["choice4"] = choice4
     res.__dict__["choice5"] = choice5
-    res.__dict__["choice6"] = choice6
     res.__dict__["round1"] = round1
     res.__dict__["round2"] = round2
     res.__dict__["response1"] = response1
     res.__dict__["response3"] = response3
 
-    return res 
+    return res
 
 if __name__ == '__main__':
     dbPopulateDummyValues(db)

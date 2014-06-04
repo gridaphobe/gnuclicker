@@ -2,8 +2,8 @@ Feature: Go to each course.
 
   Scenario: Go to a course.
     Given we are logged in as jstalin
-    When we visit the course RAINBOWS
-    Then the course page for RAINBOWS is loaded
+    When we visit the course CSE210
+    Then the course page for CSE210 is loaded
   
 
 
@@ -16,7 +16,7 @@ Feature: Go to each course.
 
 
   Scenario: Go to a the Nyan lesson.
-    Given we are logged in as jstalin
+    Given we are logged in as jbox
     And we are on the course page
     When we visit the course RAINBOWS
     And we select the NYAN lesson
@@ -25,6 +25,8 @@ Feature: Go to each course.
 
   Scenario: Return to course page.
     Given we are logged in as jstalin
-    And we are viewing a question
-    When we click Home
+    And we are on the course page
+    When we visit the course CSE210
+    And we click on the first question of CSE210
+    And we click Home
     Then we should be on the course page

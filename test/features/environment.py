@@ -2,6 +2,7 @@ from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 import os
 import subprocess
+from steps.utilities import HOSTNAME
 
 
 def before_all(context):
@@ -11,7 +12,7 @@ def before_all(context):
 
 
 def before_scenario(context, scenario):
-    context.browser.get('http://gnuclicker.herokuapp.com/logout')
+    context.browser.get('http://' + HOSTNAME + '/logout')
     WebDriverWait(context.browser, 30).until(lambda driver: driver.find_element_by_tag_name('button'))
 
 
