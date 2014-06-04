@@ -760,6 +760,10 @@ class ResponseApi(Resource):
 
     student = g.user
 
+    # Ensure student is enrolled in course.
+    if not student.isEnrolledInCourse(course):
+      return error(ENOTENROLLED)
+
     # Check if there's a current answer for user for round for user.
     response = Response.query.filter(Response.studentId == student.userId,
       Response.roundId==question.activeRound).scalar()

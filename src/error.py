@@ -18,6 +18,7 @@ ECHOICEMISMATCH = 15
 EQUESTIONACTIVE = 16
 EBADINT = 17
 ENOACTIVEQUESTIONS = 18
+ENOTENROLLED = 19
 
 _ERRTEXT = {
   EBADCOURSEID: "Unknown course id %s",
@@ -36,7 +37,8 @@ _ERRTEXT = {
   ECHOICEMISMATCH: "Choice id %s does not belong to question %s",
   EQUESTIONACTIVE: "There is already an active round for question %s",
   EBADINT: "invalid literal for int() with base 10: '%s'",
-  ENOACTIVEQUESTIONS: "No active questions for class %s"
+  ENOACTIVEQUESTIONS: "No active questions for class %s",
+  ENOTENROLLED: "User not enrolled in course as student",
 }
 
 _ERRRETCODE = {
@@ -57,6 +59,7 @@ _ERRRETCODE = {
   EQUESTIONACTIVE: 400,
   EBADINT: 400,
   ENOACTIVEQUESTIONS: 400,
+  ENOTENROLLED: 400,
 }
 
 def errtext(err, *args):
