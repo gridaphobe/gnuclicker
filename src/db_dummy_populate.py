@@ -148,8 +148,8 @@ def dbPopulateDummyValues(db):
     for question in [question2, question3, question4, question5]:
       for idx in range(5):
         choice = Choice(choiceId=str(uuid.uuid4()), question=question,
-        choiceStr="Choice %d" % (idx), choiceValid = True if idx == 2 else
-        False, choiceIdx = idx)
+        choiceStr="Choice %d" % (idx), choiceValid = 1 if idx == 2 else
+                        0, choiceIdx = idx)
         db.session.add(choice)
         question.choices.append(choice)
 

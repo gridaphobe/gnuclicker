@@ -307,7 +307,8 @@ class QuestionsApi(Resource):
     askedQuestions = [question for question in questions
       if len(question.rounds) > 0]
     def keyFn(question):
-      mostRecentRound = question.rounds[-1]
+      question.rounds.reverse()
+      mostRecentRound = question.rounds[0]
       return mostRecentRound.startTime * -1
     askedQuestions.sort(key=keyFn)
     unaskedQuestions.extend(askedQuestions)
