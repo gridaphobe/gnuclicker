@@ -28,7 +28,7 @@
     </div>
   {% endif %}
   <div class="questions">
-    <div class="heading">Questions</div>
+    <div class="heading">Questions for {{extra.lecture.lectureTitle|default("all lectures")}}</div>
     {% for question in questions %}
       {% if question.rounds|count > 0 %}
         {% set round = question.rounds[0] %}
