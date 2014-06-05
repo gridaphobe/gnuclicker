@@ -7,7 +7,6 @@
     // defaults
     onCompleted = onCompleted || function () {};
     verb = verb || 'GET';
-    data = data || {};
 
     var httpRequest;
     if (window.XMLHttpRequest) { // Mozilla, Safari, ...
@@ -41,7 +40,6 @@
         msg += '&' + key + '=' + encodeURIComponent(data[key]);
       }
       msg = msg.substring(1);
-      console.log(msg);
       httpRequest.send(msg);
     } else {
       httpRequest.send();

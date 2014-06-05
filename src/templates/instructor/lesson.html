@@ -22,11 +22,9 @@
 
 {% block body %}
   {{ macros.lecture_list(course.lectures, extra.lecture, course, isInstructor) }}
-  {% if activeQuestion %}
-    <div class="alert">
-      Active Question: <a href="activeQuestion">{{activeQuestion.title}}</a>
-    </div>
-  {% endif %}
+  <div id="alert" class="alert {% if not activeQuestion %}hidden{% endif %}">
+    Active Question: <a href="activeQuestion">{{activeQuestion.title}}</a>
+  </div>
   <div class="questions">
     <div class="heading">Questions for {{extra.lecture.lectureTitle|default("all lectures")}}</div>
     {% for question in questions %}
@@ -37,7 +35,7 @@
         {% set responses = None %}
       {% endif %}
       <a class="item" href="/courses/{{ course.courseId }}/questions?questionId={{ question.questionId }}">{{ question.title }}</a>
-      <div class="content hide">
+      <div class="question content hide">
         <div class="text">{{ question.questionBody }}</div>
         {% for choice in question.choices %}
           {% if responses %}
@@ -54,12 +52,14 @@
         {% endfor %}
         {% if isInstructor %}
           <div class="buttons">
-            {# <button>Open Poll</button> <button>Clear Results</button> #}
-            {% if question.getActiveRound() %}
-              <form method="POST" action="/courses/{{course.courseId}}/question/{{question.questionId}}/end"><button type="submit">Close Poll</button></form>
-            {% else %}
-              <form method="POST" action="/courses/{{course.courseId}}/question/{{question.questionId}}/start"><button type="submit">Open Poll</button></form>
-            {% endif %}
+            <form method="POST" class="close-poll {% if not question.getActiveRound() %}hidden{% endif %}"
+                  action="/courses/{{course.courseId}}/question/{{question.questionId}}/end">
+                  <button type="submit">Close Poll</button>
+            </form>
+            <form method="POST" class="open-poll {% if question.getActiveRound() %}hidden{% endif %}"
+                  action="/courses/{{course.courseId}}/question/{{question.questionId}}/start">
+                  <button type="submit">Open Poll</button>
+            </form>
             <a href="addQuestion?lectureId={{question.lecture.lectureId}}&questionId={{question.questionId}}"><button>Edit Question</button></a>
           </div>
         {% endif %}
