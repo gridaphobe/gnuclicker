@@ -39,15 +39,17 @@
         <div class="text">{{ question.questionBody }}</div>
         {% for choice in question.choices %}
           {% if responses %}
-            {% set percent = round.choicesOf(choice.choiceId)|count / responses * 100 %}
+            {% set count = round.choicesOf(choice.choiceId)|count %}
+            {% set percent = count / responses * 100 %}
             {% set myChoiceId = round.userResponse(g.user).choiceId %}
           {% else %}
+            {% set count = 0 %}
             {% set percent = 0 %}
             {% set myChoiceId = '' %}
           {% endif %}
           <div class="answer{% if choice.choiceValid == 1 %} correct{% endif %}{% if choice.choiceId == myChoiceId %} chosen{% endif %}">
             <div class="text">{{ choice.choiceStr }}</div>
-            <div class="result" style="width: {{ percent }}%;">{{ percent }}%</div>
+            <div class="result" style="width: {{ percent }}%;">{{count}} ({{ percent }}%)</div>
           </div>
         {% endfor %}
         {% if isInstructor %}
