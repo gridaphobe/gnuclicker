@@ -438,6 +438,7 @@ ul.dropdown.show {
       font-weight: bold;
     }
 
+/*
     @media only screen and (min-width: 481px) {
       .questions > .content > .text {
         text-align: center;
@@ -453,14 +454,15 @@ ul.dropdown.show {
         margin-left: 210px;
       }
     }
+*/
 
-    @media only screen and (max-width: 480px) {
+/*    @media only screen and (max-width: 480px) { */
       .questions > .content > .answer > .text {
       }
 
       .questions > .content > .answer > .result {
       }
-    }
+/*    } */
 
     .questions > .content > .answer > .text {
       height: 26px;
