@@ -68,6 +68,13 @@ def dbPopulateDummyValues(db):
     lecture3 = Lecture(lectureId=str(lecture3Id), course=cse101,
       lectureTitle="The Importance of Choosing the Right Language", date=datetime.datetime.utcnow())
 
+    for name in ['sam', 'dimo', 'marc', 'arjun', 'danny', 'ben', 'eric']:
+      uid = uuid.uuid4()
+      user = User(userId = str(uid), universityId=name, name=name)
+      db.session.add(user)
+
+      user.enrolledIn.append(cse101)
+
     # Add lecture to db session.
     db.session.add(lecture1)
     db.session.add(lecture2)
