@@ -520,17 +520,19 @@ ul.dropdown.show {
     height: 100px;
   }
 
-@media only screen and (max-width: 480px) {
+/*@media only screen and (max-width: 480px) {*/
   .question {
     width: 100%;
   }
-}
+/*}*/
 
+/*
 @media only screen and (min-width: 481px) {
   .question {
     min-width: 600px;
   }
 }
+*/
 .question {
   background: #C6DCF1;
   padding: 10px;
