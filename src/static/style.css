@@ -201,7 +201,9 @@ ul.dropdown.show {
       font-size: 14px;
       padding: 3px 20px;
       color: #262626;
+      text-overflow: ellipsis;
       white-space: nowrap;
+      overflow: hidden;
     }
 
     ul.dropdown li > a:hover {
@@ -256,6 +258,9 @@ ul.dropdown.show {
     height: 36px;
     line-height: 35px;
     padding: 0 20px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
   }
 
   .lessons > .item.sel {
@@ -344,8 +349,9 @@ ul.dropdown.show {
   background-repeat: repeat-x;
   height: 35px;
   line-height: 35px;
-  whitespace: nowrap;
+  overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 @media only screen and (max-width: 480px) {
@@ -373,6 +379,9 @@ ul.dropdown.show {
     background-repeat: repeat-x;
     height: 35px;
     line-height: 35px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
   }
 
   .questions > .item {
@@ -468,7 +477,9 @@ ul.dropdown.show {
       border: 1px solid #d5d5d5;
       background-image: linear-gradient(#ffe2e5, #fcb4bf);
       border-radius: 4px;
+      text-overflow: ellipsis;
       white-space: nowrap;
+      overflow: hidden;
     }
 
     .questions > .content > .answer.correct > .result {

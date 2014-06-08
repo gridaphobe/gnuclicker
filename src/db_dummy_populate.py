@@ -31,42 +31,42 @@ def dbPopulateDummyValues(db):
     db.session.add(user4)
 
     # Add courses. user2 and user1 teach a class each.
-    course1Id = uuid.uuid4()
-    course2Id = uuid.uuid4()
-    course3Id = uuid.uuid4()
+    datdaId = uuid.uuid4()
+    leadershipId = uuid.uuid4()
+    cse101Id = uuid.uuid4()
 
-    course1 = Course(courseId=str(course1Id), \
+    datda = Course(courseId=str(datdaId),
       courseTitle="Defense Against The Dark Arts", instructor=user1)
-    course2 = Course(courseId=str(course2Id), courseTitle="CSE210",\
+    leadership = Course(courseId=str(leadershipId), courseTitle="Fearless Leadership",
       instructor=user2)
-    course3 = Course(courseId=str(course3Id), courseTitle="RAINBOWS",\
+    cse101 = Course(courseId=str(cse101Id), courseTitle="CSE 101",
       instructor=user4)
 
     # Add courses to db session.
-    db.session.add(course1)
-    db.session.add(course2)
-    db.session.add(course3)
+    db.session.add(datda)
+    db.session.add(leadership)
+    db.session.add(cse101)
 
     # Note that user3 is a student in both classes. Note that user1 is a
     # student in user2's class and vice versa.
-    user3.enrolledIn.append(course1)
-    user3.enrolledIn.append(course2)
-    user1.enrolledIn.append(course2)
-    user2.enrolledIn.append(course1)
+    user3.enrolledIn.append(datda)
+    user3.enrolledIn.append(leadership)
+    user1.enrolledIn.append(leadership)
+    user2.enrolledIn.append(datda)
 
-    user1.enrolledIn.append(course3)
+    user1.enrolledIn.append(cse101)
 
     # Add a lecture to user2's class.
     lecture1Id = uuid.uuid4()
     lecture2Id = uuid.uuid4()
     lecture3Id = uuid.uuid4()
-    lecture1 = Lecture(lectureId=str(lecture1Id), course=course2,
-      lectureTitle="Administrivia", date=datetime.datetime.utcnow())
+    lecture1 = Lecture(lectureId=str(lecture1Id), course=leadership,
+      lectureTitle="Unbridled Courage", date=datetime.datetime.utcnow())
 
-    lecture2 = Lecture(lectureId=str(lecture2Id), course=course3,
-      lectureTitle="NYAN", date=datetime.datetime.utcnow())
-    lecture3 = Lecture(lectureId=str(lecture3Id), course=course3,
-      lectureTitle="OTTER!", date=datetime.datetime.utcnow())
+    lecture2 = Lecture(lectureId=str(lecture2Id), course=cse101,
+      lectureTitle="How to Choose a Beginner's Language", date=datetime.datetime.utcnow())
+    lecture3 = Lecture(lectureId=str(lecture3Id), course=cse101,
+      lectureTitle="The Importance of Choosing the Right Language", date=datetime.datetime.utcnow())
 
     # Add lecture to db session.
     db.session.add(lecture1)
@@ -81,20 +81,23 @@ def dbPopulateDummyValues(db):
     q5Id = uuid.uuid4()
 
     question1 = Question(questionId=str(q1Id), lecture=lecture1,
-      title="Bro, do you even aerodynamic lift?",
-      questionBody="What is the unladen airspeed of a swallow?")
+      title="Instructor Scenarios",
+      questionBody="What can an instructor do with Gnu/Clicker?")
     question2 = Question(questionId=str(q2Id), lecture=lecture2,
-      title="WTF MATE?",
-      questionBody="Fucking kangaroos.")
+      title="Arjun raises a good point",
+      questionBody="Arjun raises a good point, what is the best language for teaching Intro to Programming?")
     question3 = Question(questionId=str(q3Id), lecture=lecture2,
-      title="To be or not to be?",
-      questionBody="WHO CARES.")
+      title="Dimo raises a good point",
+      questionBody="Dimo raises a good point, what is the best language for teaching Intro to Programming?")
     question4 = Question(questionId=str(q4Id), lecture=lecture2,
-      title="How much wood does a woodchuck have to chuck to.. ooh SQUIRREL!",
-      questionBody="An ADHD Squirrel.")
+      title="Eric raises a good point",
+      questionBody="Eric raises a good point, what is the best language for teaching Intro to Programming?")
     question5 = Question(questionId=str(q5Id), lecture=lecture2,
-      title="Do I have an active round?",
-      questionBody="Do I?")
+      title="Sam raises a good point",
+      questionBody="Sam raises a good point, what is the best language for teaching Intro to Programming?")
+    question6 = Question(questionId=str(uuid.uuid4()), lecture=lecture1,
+      title="Student Scenarios",
+      questionBody="What can a student do with Gnu/Clicker?")
 
     # Create tags
     tag1Id = uuid.uuid4()
@@ -122,6 +125,7 @@ def dbPopulateDummyValues(db):
     db.session.add(question3)
     db.session.add(question4)
     db.session.add(question5)
+    db.session.add(question6)
     db.session.add(tag1)
     db.session.add(tag2)
     db.session.add(tag3)
@@ -135,70 +139,79 @@ def dbPopulateDummyValues(db):
     choice6Id = uuid.uuid4()
 
     choice1 = Choice(choiceId=str(choice1Id), question=question1,
-      choiceStr="European", choiceValid=0, choiceIdx=0)
+      choiceStr="Create a list of questions for a lecture", choiceValid=1, choiceIdx=0)
     choice2 = Choice(choiceId=str(choice2Id), question=question1,
-      choiceStr="African", choiceValid=0, choiceIdx=1)
+      choiceStr="Post questions to students", choiceValid=1, choiceIdx=1)
     choice3 = Choice(choiceId=str(choice3Id), question=question1,
-      choiceStr="AAAAARGGGHHHH", choiceValid=1, choiceIdx=2)
-    choice4 = Choice(choiceId=str(choice4Id), question=question1,
-      choiceStr="5 mph", choiceValid=1, choiceIdx=3)
-    choice5 = Choice(choiceId=str(choice5Id), question=question1,
-      choiceStr="6 mph", choiceValid=0, choiceIdx=4)
-
-    for question in [question2, question3, question4, question5]:
-      for idx in range(5):
-        choice = Choice(choiceId=str(uuid.uuid4()), question=question,
-        choiceStr="Choice %d" % (idx), choiceValid = 1 if idx == 2 else
-                        0, choiceIdx = idx)
-        db.session.add(choice)
-        question.choices.append(choice)
+      choiceStr="Review student responses", choiceValid=1, choiceIdx=2)
 
     # Add answers to session.
     db.session.add(choice1)
     db.session.add(choice2)
     db.session.add(choice3)
-    db.session.add(choice4)
-    db.session.add(choice5)
 
     # Add answers to possible answers set.
     question1.choices.append(choice1)
     question1.choices.append(choice2)
     question1.choices.append(choice3)
-    question1.choices.append(choice4)
-    question1.choices.append(choice5)
 
-    # Add one round of answers to the first question.
-    round1Id = uuid.uuid4()
-    round2Id = uuid.uuid4()
+    choice1 = Choice(choiceId=str(uuid.uuid4()), question=question6,
+      choiceStr="(Re-)Submit a response", choiceValid=1, choiceIdx=0)
+    choice2 = Choice(choiceId=str(uuid.uuid4()), question=question6,
+      choiceStr="Review questions and responses", choiceValid=1, choiceIdx=1)
 
-    round1 = Round(roundId=str(round1Id), question=question1, startTime=0,
-      endTime=10)
-    question1.rounds.append(round1)
+    # Add answers to session.
+    db.session.add(choice1)
+    db.session.add(choice2)
 
-    round2 = Round(roundId=str(round2Id), question=question5, startTime=0,
-      endTime=10)
-    question5.rounds.append(round2)
-    question5.activeRound = round2.roundId
-    question5.tags = []
+    # Add answers to possible answers set.
+    question6.choices.append(choice1)
+    question6.choices.append(choice2)
 
-    # Add round to session.
-    db.session.add(round1)
-    db.session.add(round2)
+    for question in [question2, question3, question4, question5]:
+      for idx, lang in enumerate(['Java', 'Python', 'C', 'Coq', 'Circuits']):
+        choice = Choice(choiceId=str(uuid.uuid4()),
+                        question=question,
+                        choiceStr=lang,
+                        choiceValid = 1 if (idx == 3 or idx == 4) else 0,
+                        choiceIdx = idx)
+        db.session.add(choice)
+        question.choices.append(choice)
 
-    # Add user1's and user3's responses.
-    response1Id = uuid.uuid4()
-    response3Id = uuid.uuid4()
 
-    response1 = Response(responseId=str(response1Id), roundFor=round1,
-      studentId=str(user1Id), choiceId=str(choice3Id))
-    response3 = Response(responseId=str(response3Id), roundFor=round1,
-      studentId=str(user3Id), choiceId=str(choice4Id))
-    round1.responses.append(response1)
-    round1.responses.append(response3)
+    # # Add one round of answers to the first question.
+    # round1Id = uuid.uuid4()
+    # round2Id = uuid.uuid4()
 
-    # Add responses to session.
-    db.session.add(response1)
-    db.session.add(response3)
+    # round1 = Round(roundId=str(round1Id), question=question1, startTime=0,
+    #   endTime=10)
+    # question1.rounds.append(round1)
+
+    # round2 = Round(roundId=str(round2Id), question=question5, startTime=0,
+    #   endTime=10)
+    # question5.rounds.append(round2)
+    # question5.activeRound = round2.roundId
+    # question5.tags = []
+
+    # # Add round to session.
+    # db.session.add(round1)
+    # db.session.add(round2)
+
+    # # Add user1's and user3's responses.
+    # response1Id = uuid.uuid4()
+    # response3Id = uuid.uuid4()
+
+    # response1 = Response(responseId=str(response1Id), roundFor=round1,
+    #   studentId=str(user1Id), choiceId=str(choice3Id))
+    # response3 = Response(responseId=str(response3Id), roundFor=round1,
+    #   studentId=str(user3Id), choiceId=str(choice4Id))
+    # round1.responses.append(response1)
+    # round1.responses.append(response3)
+
+    # # Add responses to session.
+    # db.session.add(response1)
+    # db.session.add(response3)
+
     db.session.commit()
 
     class Result:   pass
@@ -208,9 +221,9 @@ def dbPopulateDummyValues(db):
     res.__dict__["user2"] = user2
     res.__dict__["user3"] = user3
     res.__dict__["user4"] = user4
-    res.__dict__["course1"] = course1
-    res.__dict__["course2"] = course2
-    res.__dict__["course3"] = course3
+    res.__dict__["course1"] = datda
+    res.__dict__["course2"] = leadership
+    res.__dict__["course3"] = cse101
     res.__dict__["lecture1"] = lecture1
     res.__dict__["lecture2"] = lecture2
     res.__dict__["lecture3"] = lecture3
@@ -222,12 +235,12 @@ def dbPopulateDummyValues(db):
     res.__dict__["choice1"] = choice1
     res.__dict__["choice2"] = choice2
     res.__dict__["choice3"] = choice3
-    res.__dict__["choice4"] = choice4
-    res.__dict__["choice5"] = choice5
-    res.__dict__["round1"] = round1
-    res.__dict__["round2"] = round2
-    res.__dict__["response1"] = response1
-    res.__dict__["response3"] = response3
+    # res.__dict__["choice4"] = choice4
+    # res.__dict__["choice5"] = choice5
+    # res.__dict__["round1"] = round1
+    # res.__dict__["round2"] = round2
+    # res.__dict__["response1"] = response1
+    # res.__dict__["response3"] = response3
 
     return res
 
