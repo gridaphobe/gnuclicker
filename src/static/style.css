@@ -511,6 +511,10 @@ ul.dropdown.show {
     text-align: right;
   }
 
+    .questions > .content > .buttons > form {
+      display: inline-block;
+    }
+
   .questions > .content.hide {
     height: 0;
     padding: 0px;
