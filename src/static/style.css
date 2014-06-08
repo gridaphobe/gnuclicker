@@ -29,7 +29,7 @@ a {
 }
 
 .hidden {
-  display: none;
+  display: none !important;
 }
 
 input[type=button],
@@ -510,6 +510,10 @@ ul.dropdown.show {
   .questions > .content > .buttons {
     text-align: right;
   }
+
+    .questions > .content > .buttons > form {
+      display: inline-block;
+    }
 
   .questions > .content.hide {
     height: 0;
